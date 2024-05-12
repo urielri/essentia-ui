@@ -1,0 +1,6 @@
+.turbo/
+.next/
+.git/
+dist/
+
+node_modules/
