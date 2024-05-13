@@ -1,15 +1,12 @@
 {
   "name": "essentia-ui",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "license": "ISC",
   "homepage": "",
   "scripts": {
-    "build": "node --run build:vite",
     "clean": "node --run clean --workspace=essentia-ui",
-    "docs": "node --run dev --workspace=essentia-ui",
-    "docs:plop": "node --run plop --workspace=essentia-ui",
-    "lint": "next lint"
+    "publish-packages": "turbo run lint test build && changeset version && changeset publish"
   },
   "keywords": [],
   "author": {
@@ -35,6 +32,7 @@
     "turbo": "^1.13.3"
   },
   "dependencies": {
+    "@changesets/cli": "^2.27.1",
     "react": "19.0.0-beta-04b058868c-20240508",
     "react-dom": "19.0.0-beta-04b058868c-20240508"
   }

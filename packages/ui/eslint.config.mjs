@@ -1,5 +1,5 @@
 export default [
   {
-    extend: "@repo/eslint-config/global.mjs",
+    extend: "eslint-config/global.mjs",
   },
 ];

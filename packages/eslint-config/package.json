@@ -1,5 +1,6 @@
 {
-  "name": "@repo/eslint-config",
+  "name": "eslint-config",
+  "version": "0.1.0",
   "files": [
     "global.mjs"
   ]
