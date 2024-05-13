@@ -8,10 +8,10 @@ export default defineConfig({
   root: ".",
   resolve: {
     alias: {
-      "#components/": "/components/",
-      "#state": "./state/index.ts",
-      "#types": "./types/index.ts",
-      "#hooks": "./hooks/index.ts",
+      "#components/": "./src/components/",
+      "#state": "./src/state/index.ts",
+      "#types": "./src/types/index.ts",
+      "#hooks": "./src/hooks/index.ts",
     },
   },
   test: {
@@ -19,7 +19,7 @@ export default defineConfig({
     environment: "jsdom",
     include: [
       "./__tests__/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}",
-      "./components/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}",
+      "./src/components/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}",
     ],
   },
 });

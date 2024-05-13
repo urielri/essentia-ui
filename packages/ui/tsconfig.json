@@ -2,12 +2,12 @@
   "extends": "tsconfig/ui.json",
 
   "compilerOptions": {
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "paths": {
-      "#components/": ["/components/"],
-      "#state": ["./state/index.ts"],
-      "#types": ["./types/index.ts"],
-      "#hooks": ["./hooks/index.ts"]
+      "#components/": ["./src/components/"],
+      "#state": ["./src/state/index.ts"],
+      "#types": ["./src/types/index.ts"],
+      "#hooks": ["./src/hooks/index.ts"]
     }
   }
 }
