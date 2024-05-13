@@ -1,13 +1,11 @@
 {
   "name": "@repo/ui",
   "scripts": {
-    "dev": "vite",
     "build": "tsc && vite build",
     "test": "vitest"
   },
   "dependencies": {
-    "tsconfig": "workspace:*",
-    "next": "^14.2.3"
+    "tsconfig": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^18.3.1",

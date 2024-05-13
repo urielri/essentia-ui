@@ -12,7 +12,6 @@ export default defineConfig({
       "#state": "./state/index.ts",
       "#types": "./types/index.ts",
       "#hooks": "./hooks/index.ts",
-      "#utils": "./components/utils/index.ts",
     },
   },
   test: {

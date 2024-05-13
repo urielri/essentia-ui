@@ -1,3 +1,13 @@
 {
-  "extends": "tsconfig/ui.json"
+  "extends": "tsconfig/ui.json",
+
+  "compilerOptions": {
+    "jsx": "preserve",
+    "paths": {
+      "#components/": ["/components/"],
+      "#state": ["./state/index.ts"],
+      "#types": ["./types/index.ts"],
+      "#hooks": ["./hooks/index.ts"]
+    }
+  }
 }
