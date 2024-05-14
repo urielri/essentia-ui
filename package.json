@@ -1,6 +1,6 @@
 {
-  "name": "essentia-ui",
-  "version": "0.1.0",
+  "name": "root",
+  "version": "0.0.0",
   "description": "",
   "license": "ISC",
   "scripts": {

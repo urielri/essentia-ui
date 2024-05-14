@@ -1,3 +1,11 @@
-export const Button = () => {
-  return <button type="button">Click me</button>;
+"use client";
+
+import { type FC } from "react";
+
+export const Default: FC = () => {
+  return <></>;
+};
+
+export const T01: FC = () => {
+  return <></>;
 };

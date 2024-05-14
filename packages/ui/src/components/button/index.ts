@@ -1,3 +1,2 @@
-import { Button } from "./c";
-
-export default { Button };
+import { Default, T01 } from "./c";
+export default { Default, T01 };
