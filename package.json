@@ -8,6 +8,10 @@
     "clean": "node --run clean --workspace=essentia-ui",
     "publish-packages": "turbo run lint test build && changeset version && changeset publish"
   },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "keywords": [],
   "author": {
     "name": "Uriel Rivero",
