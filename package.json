@@ -3,14 +3,9 @@
   "version": "0.1.0",
   "description": "",
   "license": "ISC",
-  "homepage": "",
   "scripts": {
     "clean": "node --run clean --workspace=essentia-ui",
     "publish-packages": "turbo run lint test build && changeset version && changeset publish"
-  },
-  "publishConfig": {
-    "access": "public",
-    "@urielri:registry": "https://npm.pkg.github.com"
   },
   "keywords": [],
   "author": {
@@ -27,10 +22,8 @@
     "node": ">=20"
   },
   "workspaces": [
-    "packages/ui",
-    "packages/icons",
     "packages/*",
-    "apps/web"
+    "apps/*"
   ],
   "devDependencies": {
     "turbo": "^1.13.3"
