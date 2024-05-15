@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "ui": "workspace:*"
+    "essentia-ui": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5",
