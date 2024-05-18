@@ -14,9 +14,11 @@ export default defineConfig({
       "#hooks": "./src/hooks/index.ts",
     },
   },
+
   test: {
     css: true,
     environment: "jsdom",
+    setupFiles: ["./__mocks__/globals.ts"],
     include: [
       "./__tests__/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}",
       "./src/components/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}",

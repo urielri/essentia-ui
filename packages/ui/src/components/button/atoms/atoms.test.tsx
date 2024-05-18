@@ -1,6 +1,6 @@
 import { describe, expect, it, afterEach } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
-import { Root, Button, Icon, Text } from ".";
+import { Root, Button, Icon, Text, Sizes } from ".";
 
 describe("Root Atom", () => {
   afterEach(cleanup);
@@ -79,4 +79,9 @@ describe("Text Atom", () => {
   });
 });
 
-describe.skip("Sizes Atom", () => {});
+describe.skip("Sizes Atom", () => {
+  afterEach(cleanup);
+  it("Render Sizes", () => {
+    render(<Sizes />);
+  });
+});

@@ -1,4 +1,3 @@
-import { it } from "node:test";
 import {
   type ButtonHTMLAttributes,
   type DetailedHTMLProps,
@@ -7,14 +6,13 @@ import {
   DetailsHTMLAttributes,
   useLayoutEffect,
 } from "react";
-
-const atoms = {
-  button: "button",
-  root: "root",
-  icon: "icon",
-  text: "text",
-} as const;
-type AtomsKeys = keyof typeof atoms;
+import {
+  atoms,
+  type AtomsKeys,
+  type Size,
+  DEFAULT_SIZE,
+  setDefaultValues,
+} from "./internal";
 
 type RootProps = DetailsHTMLAttributes<HTMLDivElement>;
 
@@ -23,7 +21,7 @@ export const Root: FC<PropsWithChildren<RootProps>> = ({
   ...rest
 }) => {
   return (
-    <div data-testid="root" {...rest}>
+    <div id={atoms.root} data-testid="root" {...rest}>
       {children}
     </div>
   );
@@ -39,18 +37,23 @@ export const Button: FC<PropsWithChildren<ButtonProps>> = ({
   ...rest
 }) => {
   return (
-    <button data-testid="button" {...rest}>
+    <button id={atoms.button} data-testid="button" {...rest}>
       {children}
     </button>
   );
 };
+1;
 
 type IconProps = {
   children?: JSX.Element;
 };
 
 export const Icon: FC<IconProps> = ({ children = null }) => {
-  return <div data-testid="icon">{children}</div>;
+  return (
+    <div id={atoms.icon} data-testid="icon">
+      {children}
+    </div>
+  );
 };
 
 type TextProps = {
@@ -58,34 +61,30 @@ type TextProps = {
 };
 
 export const Text: FC<TextProps> = ({ children = null }) => {
-  return <span data-testid="text">{children}</span>;
+  return (
+    <span id={atoms.text} data-testid="text">
+      {children}
+    </span>
+  );
 };
 
-type Size = "xs" | "s" | "m" | "l" | "xl";
 type SizesProps = {
-  default?: boolean;
-  size: Size;
+  isDefault?: boolean;
+  size?: Size;
   exclude?: AtomsKeys[];
+  values?: Record<AtomsKeys, string>;
 };
 
-function getAtom(key: string): HTMLElement {
-  const element = document.getElementById(key);
-  if (!element) throw new Error("Element not found");
-  return element;
-}
+export const Sizes: FC<SizesProps> = ({
+  isDefault = true,
+  size = DEFAULT_SIZE,
+  exclude = undefined,
+  values = undefined,
+}) => {
+  useLayoutEffect(() => {
+    /** Setea valores por defecto */
+    if (isDefault) setDefaultValues(`size-${size}`, exclude);
+  }, []);
 
-function getAtoms(keys: string[]): HTMLElement[] {
-  const listElements: HTMLElement[] = [];
-  for (let [key, value] of keys) {
-    if (!value) throw new Error("Value is invalid");
-    const iteration = getAtom(value);
-    if (!iteration) throw new Error("Cannot get element " + key);
-    listElements.push(iteration);
-  }
-  return listElements;
-}
-
-export const Sizes: FC<SizesProps> = () => {
-  useLayoutEffect(() => {}, []);
   return null;
 };
