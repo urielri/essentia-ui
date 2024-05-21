@@ -7,7 +7,7 @@ import {
   useLayoutEffect,
 } from "react";
 import {
-  atoms,
+  ATOMS,
   type AtomsKeys,
   type Size,
   DEFAULT_SIZE,
@@ -21,7 +21,7 @@ export const Root: FC<PropsWithChildren<RootProps>> = ({
   ...rest
 }) => {
   return (
-    <div id={atoms.root} data-testid="root" {...rest}>
+    <div id={ATOMS.root} data-testid="root" {...rest}>
       {children}
     </div>
   );
@@ -37,7 +37,7 @@ export const Button: FC<PropsWithChildren<ButtonProps>> = ({
   ...rest
 }) => {
   return (
-    <button id={atoms.button} data-testid="button" {...rest}>
+    <button id={ATOMS.button} data-testid="button" {...rest}>
       {children}
     </button>
   );
@@ -50,7 +50,7 @@ type IconProps = {
 
 export const Icon: FC<IconProps> = ({ children = null }) => {
   return (
-    <div id={atoms.icon} data-testid="icon">
+    <div id={ATOMS.icon} data-testid="icon">
       {children}
     </div>
   );
@@ -62,7 +62,7 @@ type TextProps = {
 
 export const Text: FC<TextProps> = ({ children = null }) => {
   return (
-    <span id={atoms.text} data-testid="text">
+    <span id={ATOMS.text} data-testid="text">
       {children}
     </span>
   );
