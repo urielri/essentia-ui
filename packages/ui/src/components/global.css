@@ -1,2 +1,6 @@
 :root {
+  --size: 0.5rem;
+  --border: 1px solid;
+  --box-sizing: border-box;
+  --font-size: 1rem;
 }

@@ -1,18 +1,18 @@
 import {
+  useLayoutEffect,
   type ButtonHTMLAttributes,
   type DetailedHTMLProps,
-  type PropsWithChildren,
+  type DetailsHTMLAttributes,
   type FC,
-  DetailsHTMLAttributes,
-  useLayoutEffect,
+  type PropsWithChildren,
 } from "react";
 import {
-  ATOMS,
-  type AtomsKeys,
-  type Size,
+  PARTICLES,
   DEFAULT_SIZE,
-  setDefaultValues,
-} from "./internal";
+  setValues,
+  type ParticlesKeys,
+  type Size,
+} from "./rules";
 
 type RootProps = DetailsHTMLAttributes<HTMLDivElement>;
 
@@ -21,23 +21,24 @@ export const Root: FC<PropsWithChildren<RootProps>> = ({
   ...rest
 }) => {
   return (
-    <div id={ATOMS.root} data-testid="root" {...rest}>
+    <div id={PARTICLES.root} data-testid="root" {...rest}>
       {children}
     </div>
   );
 };
 
-type ButtonProps = DetailedHTMLProps<
+type ButtonProps<T = {}> = DetailedHTMLProps<
   ButtonHTMLAttributes<HTMLButtonElement>,
   HTMLButtonElement
-> & {};
+> &
+  T;
 
 export const Button: FC<PropsWithChildren<ButtonProps>> = ({
   children,
   ...rest
 }) => {
   return (
-    <button id={ATOMS.button} data-testid="button" {...rest}>
+    <button id={PARTICLES.button} data-testid="button" {...rest}>
       {children}
     </button>
   );
@@ -50,7 +51,7 @@ type IconProps = {
 
 export const Icon: FC<IconProps> = ({ children = null }) => {
   return (
-    <div id={ATOMS.icon} data-testid="icon">
+    <div id={PARTICLES.icon} data-testid="icon">
       {children}
     </div>
   );
@@ -62,28 +63,25 @@ type TextProps = {
 
 export const Text: FC<TextProps> = ({ children = null }) => {
   return (
-    <span id={ATOMS.text} data-testid="text">
+    <span id={PARTICLES.text} data-testid="text">
       {children}
     </span>
   );
 };
 
 type SizesProps = {
-  isDefault?: boolean;
   size?: Size;
-  exclude?: AtomsKeys[];
-  values?: Record<AtomsKeys, string>;
+  exclude?: ParticlesKeys[];
 };
 
 export const Sizes: FC<SizesProps> = ({
-  isDefault = true,
   size = DEFAULT_SIZE,
   exclude = undefined,
-  values = undefined,
 }) => {
   useLayoutEffect(() => {
     /** Setea valores por defecto */
-    if (isDefault) setDefaultValues(`size-${size}`, exclude);
+    setValues(`size-${size}`, exclude);
+    // if(!isDefualt) setVal
   }, []);
 
   return null;

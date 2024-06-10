@@ -2,5 +2,6 @@
 .next/
 .git/
 dist/
+results/
 
 node_modules/
