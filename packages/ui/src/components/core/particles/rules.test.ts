@@ -1,5 +1,11 @@
 import { beforeEach, afterEach, describe, expect, it } from "vitest";
-import { addClass, PARTICLES, getParticle, getParticles, setValues } from "./rules";
+import {
+  addClass,
+  PARTICLES,
+  getParticle,
+  getParticles,
+  setValues,
+} from "./rules";
 
 function clean(): void {
   const elements = document.body.children;

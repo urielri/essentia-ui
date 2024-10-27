@@ -1,16 +1,16 @@
 import {
-  useLayoutEffect,
   type ButtonHTMLAttributes,
   type DetailedHTMLProps,
   type DetailsHTMLAttributes,
   type FC,
   type PropsWithChildren,
+  useLayoutEffect,
 } from "react";
 import {
-  PARTICLES,
   DEFAULT_SIZE,
-  setValues,
+  PARTICLES,
   type ParticlesKeys,
+  setValues,
   type Size,
 } from "./rules";
 
@@ -43,13 +43,9 @@ export const Button: FC<PropsWithChildren<ButtonProps>> = ({
     </button>
   );
 };
-1;
-
-type IconProps = {
-  children?: JSX.Element;
-};
-
-export const Icon: FC<IconProps> = ({ children = null }) => {
+export const Icon: FC<PropsWithChildren> = ({ children = null }) => {
+  if (typeof children === "string")
+    throw new Error("Children cannot be string");
   return (
     <div id={PARTICLES.icon} data-testid="icon">
       {children}
@@ -81,7 +77,6 @@ export const Sizes: FC<SizesProps> = ({
   useLayoutEffect(() => {
     /** Setea valores por defecto */
     setValues(`size-${size}`, exclude);
-    // if(!isDefualt) setVal
   }, []);
 
   return null;

@@ -1,14 +1,15 @@
-/** All PARTICLES for Button Molecule */
+/** All PARTICLES */
 export const PARTICLES = {
   button: "button",
   root: "root",
   icon: "icon",
   text: "text",
 } as const;
-export const DEFAULT_SIZE = "m" as Size;
-export const ParticlesKeys = Object.values(PARTICLES);
-
+export const PARTICLES_KEYS = Object.values(PARTICLES);
 export type ParticlesKeys = keyof typeof PARTICLES;
+
+export const DEFAULT_SIZE = "m" as Size;
+
 export type Size = "xs" | "s" | "m" | "l" | "xl";
 
 /**
@@ -54,12 +55,12 @@ export function setValues(className: string, exclude?: ParticlesKeys[]): void {
   /** si <exclude> contiene valores, filtra */
   if (exclude && exclude.length > 0) {
     /** Ordenamos los arreglos para recorrerlos una vez */
-    const excludeSort = exclude.sort();
-    const PARTICLESSort = Object.values(PARTICLES).sort();
+    //const excludeSort = exclude.sort();
+    const particlesSort = Object.values(PARTICLES).sort();
 
     const items: ParticlesKeys[] = [];
-    PARTICLESSort.forEach((value, i) => {
-      if (value !== excludeSort[i]) {
+    particlesSort.forEach((value) => {
+      if (!exclude.find((e) => e === value)) {
         items.push(value);
       }
     });
@@ -67,7 +68,7 @@ export function setValues(className: string, exclude?: ParticlesKeys[]): void {
     return;
   }
   /** Setea todos los atomos con clase size-m por defecto */
-  const listPARTICLES = getParticles(ParticlesKeys);
+  const listPARTICLES = getParticles(PARTICLES_KEYS);
   addClass(listPARTICLES, className);
   return;
 }
