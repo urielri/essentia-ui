@@ -4,3 +4,67 @@
   --box-sizing: border-box;
   --font-size: 1rem;
 }
+
+.grid {
+  --space: 10;
+  --breakout-max-width: 1000px;
+  --content-max-width: ;
+  --cell-size: 2rem;
+  --cell: [cell-start] minmax(var(--cell-size), 1fr) [cell-end];
+  display: grid;
+  position: relative;
+  grid-template-columns:
+    [full-width-start]
+    repeat(var(--space), var(--cell))
+    [content-start] repeat(auto-fill, var(--cell))
+    [content-end]
+    repeat(var(--space), var(--cell))
+    [full-width-end];
+  grid-auto-flow: row;
+  grid-auto-rows: auto;
+}
+
+.grid > .full-width {
+  grid-column: full-width;
+}
+
+.root {
+  width: 100%;
+  height: 100vh;
+}
+
+.full-width {
+  grid-column: full-width;
+  background-color: pink;
+}
+
+.content-grid {
+  height: 100%;
+  grid-column: content;
+  background: red;
+  display: grid;
+}
+
+.breakout {
+  grid-column: calc(var(--space) / 2) / calc(var(--space) / -2);
+}
+
+.full-width {
+  grid-column: full-width;
+}
+
+.auto-width {
+  grid-column: ;
+}
+
+@media screen and (min-width: 320px) {
+  .grid {
+    --space: 2;
+  }
+}
+
+@media screen and (min-width: 720px) {
+  .grid {
+    --space: 10;
+  }
+}

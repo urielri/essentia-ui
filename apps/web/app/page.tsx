@@ -1,14 +1,25 @@
-import styles from "./page.module.css";
-import { Button } from "@repo/ui";
+import { Button, Layout } from "essentia-ui";
 export default function Home() {
   return (
-    <main className={styles.main}>
-      <Button.Button>Buen dia</Button.Button>
-      <Button.Button svgOnly>
-        <Icon />
-      </Button.Button>
-      <Button.Button></Button.Button>
-    </main>
+    <Layout.Root>
+      <div
+        style={{
+          backgroundColor: "aliceblue",
+          height: 80,
+        }}
+      >
+        STYLE HEREDADO
+      </div>
+      <div className="full-width" style={{ height: 80 }}>
+        CLASE HEREDADA
+      </div>
+      <div
+        className="breakout"
+        style={{ background: "yellow", height: "100%" }}
+      >
+        BREAKOUT
+      </div>
+    </Layout.Root>
   );
 }
 

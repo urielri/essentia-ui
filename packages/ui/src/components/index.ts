@@ -1,1 +1,2 @@
-export { default as Button } from "./molecules/button";
+export { Button } from "./molecules/button";
+export { default as Layout } from "./layout";

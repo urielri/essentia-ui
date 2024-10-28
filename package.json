@@ -26,11 +26,11 @@
     "apps/*"
   ],
   "devDependencies": {
-    "turbo": "^1.13.3"
+    "turbo": "^2.2.3"
   },
   "dependencies": {
-    "@changesets/cli": "^2.27.1",
-    "react": "19.0.0-beta-04b058868c-20240508",
-    "react-dom": "19.0.0-beta-04b058868c-20240508"
+    "@changesets/cli": "^2.27.9",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   }
 }
