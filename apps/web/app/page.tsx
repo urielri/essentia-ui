@@ -1,24 +1,46 @@
 import { Button, Layout } from "essentia-ui";
-export default function Home() {
+
+async function hello() {
+  let t = "";
+  await setTimeout(() => {
+    t = "Hola";
+  }, 1000);
+  return t;
+}
+
+export default async function Home() {
+  const h = await hello();
   return (
-    <Layout.Root>
-      <div
-        style={{
-          backgroundColor: "aliceblue",
-          height: 80,
-        }}
-      >
-        STYLE HEREDADO
-      </div>
-      <div className="full-width" style={{ height: 80 }}>
-        CLASE HEREDADA
-      </div>
+    <Layout.Root style={{ gridTemplateRows: "80px 1fr 80px" }}>
+      <Layout.FullWidth>
+        <div
+          style={{ backgroundColor: "aliceblue", height: 60, width: "100%" }}
+        >
+          <h1>{h}</h1>
+        </div>
+        <div style={{ backgroundColor: "gainsboro", height: 20 }}></div>
+      </Layout.FullWidth>
       <div
         className="breakout"
         style={{ background: "yellow", height: "100%" }}
       >
-        BREAKOUT
+        <div style={{ backgroundColor: "green" }}>
+          <Button>Button</Button>
+          <Button>Button</Button>
+          <Button>Button</Button>
+          <Button>Button</Button>
+        </div>
+        <div
+          className="content-grid"
+          style={{ backgroundColor: "antiquewhite" }}
+        >
+          <Button>Button</Button>
+        </div>
       </div>
+      <div style={{ backgroundColor: "red" }}></div>
+      <Layout.FullWidth>
+        <div style={{ backgroundColor: "aliceblue", height: 80 }}>full</div>
+      </Layout.FullWidth>
     </Layout.Root>
   );
 }

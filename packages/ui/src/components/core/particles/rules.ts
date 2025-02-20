@@ -1,3 +1,5 @@
+import { Size } from "../../../types";
+
 /** All PARTICLES */
 export const PARTICLES = {
   button: "button",
@@ -10,8 +12,6 @@ export type ParticlesKeys = keyof typeof PARTICLES;
 
 export const DEFAULT_SIZE = "m" as Size;
 
-export type Size = "xs" | "s" | "m" | "l" | "xl";
-
 /**
  * Get element since DOM
  * @param {ParticlesKeys|string} key
@@ -20,9 +20,7 @@ export type Size = "xs" | "s" | "m" | "l" | "xl";
 export function getParticle<T = ParticlesKeys>(key: T): HTMLElement {
   try {
     const element = document.getElementById(key as string);
-
     if (!element) throw new Error("Particle not found");
-
     return element;
   } catch (error: any) {
     throw new Error(`${error.message as string}: KEY ${key}..`);

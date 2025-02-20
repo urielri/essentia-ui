@@ -1,6 +1,5 @@
 {
-  "extends": "tsconfig/ui.json",
-
+  "extends": "@repo/typescript-config/react-library.json",
   "compilerOptions": {
     "jsx": "react-jsx",
     "paths": {
@@ -8,6 +7,8 @@
       "#state": ["./src/state/index.ts"],
       "#types": ["./src/types/index.ts"],
       "#hooks": ["./src/hooks/index.ts"]
-    }
+    },
+    "include": ["**/*.ts", "**/*.tsx"],
+    "exclude": ["node_modules", "dist"]
   }
 }

@@ -6,20 +6,28 @@ import {
   type PropsWithChildren,
   useLayoutEffect,
 } from "react";
+
 import {
   DEFAULT_SIZE,
   PARTICLES,
   type ParticlesKeys,
   setValues,
-  type Size,
 } from "./rules";
+import { Size } from "../../../types";
+
+type Props<T = {}, E = HTMLDivElement> = Omit<
+  DetailsHTMLAttributes<E>,
+  "data-testid"
+> &
+  PropsWithChildren<
+    T & {
+      className?: string;
+    }
+  >;
 
 type RootProps = DetailsHTMLAttributes<HTMLDivElement>;
 
-export const Root: FC<PropsWithChildren<RootProps>> = ({
-  children,
-  ...rest
-}) => {
+export const Root: FC<Props<RootProps>> = ({ children, ...rest }) => {
   return (
     <div id={PARTICLES.root} data-testid="root" {...rest}>
       {children}
@@ -33,17 +41,16 @@ type ButtonProps<T = {}> = DetailedHTMLProps<
 > &
   T;
 
-export const Button: FC<PropsWithChildren<ButtonProps>> = ({
-  children,
-  ...rest
-}) => {
+export const Button: FC<Props<ButtonProps>> = ({ children, ...rest }) => {
   return (
     <button id={PARTICLES.button} data-testid="button" {...rest}>
       {children}
     </button>
   );
 };
-export const Icon: FC<PropsWithChildren> = ({ children = null }) => {
+
+type IconProps = Props;
+export const Icon: FC<Props> = ({ children = null }) => {
   if (typeof children === "string")
     throw new Error("Children cannot be string");
   return (
@@ -53,10 +60,7 @@ export const Icon: FC<PropsWithChildren> = ({ children = null }) => {
   );
 };
 
-type TextProps = {
-  children?: string;
-};
-
+type TextProps = Props;
 export const Text: FC<TextProps> = ({ children = null }) => {
   return (
     <span id={PARTICLES.text} data-testid="text">

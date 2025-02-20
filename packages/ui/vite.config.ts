@@ -1,27 +1,33 @@
-/// <reference types="vitest" />
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { generalConfig } from "@repo/vite-config/general";
+import { defineConfig } from "vitest/config";
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
-  root: ".",
-  resolve: {
-    alias: {
-      "#components/": "./src/components/",
-      "#state": "./src/state/index.ts",
-      "#types": "./src/types/index.ts",
-      "#hooks": "./src/hooks/index.ts",
+  ...generalConfig,
+  build: {
+    lib: {
+      entry: ["./components/index.ts"],
+      name: "guanaco-ui",
+      rollupOptions: {
+        external: ["react", "react-dom"],
+        output: {
+          globals: {
+            react: "React",
+            "react-dom": "ReactDOM",
+          },
+        },
+      },
+      sourcemap: true,
     },
   },
-
+  resolve: {
+    alias: {
+      "#components/": "/components/",
+      "#icons": "/components/icons/index.ts",
+    },
+  },
   test: {
-    css: true,
+    ...generalConfig.test,
+    setupFiles: ["./globalMock.js"],
     environment: "jsdom",
-    setupFiles: ["./__mocks__/globals.ts"],
-    include: [
-      "./__tests__/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}",
-      "./src/components/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}",
-    ],
   },
 });

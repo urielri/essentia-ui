@@ -1,11 +1,13 @@
 {
-  "name": "root",
+  "name": "essentia",
   "version": "0.0.0",
   "description": "",
   "license": "ISC",
   "scripts": {
     "clean": "node --run clean --workspace=essentia-ui",
-    "publish-packages": "turbo run lint test build && changeset version && changeset publish"
+    "publish-packages": "turbo run lint test build && changeset version && changeset publish",
+    "task": "./run-task.sh",
+    "clean-nm": "./clean-node_modules.sh"
   },
   "keywords": [],
   "author": {
@@ -17,20 +19,24 @@
     "type": "git",
     "url": "https://github.com/urielri/essentia-ui"
   },
-  "packageManager": "pnpm@9.1.0",
+  "packageManager": "pnpm@10.4.1",
   "engines": {
     "node": ">=20"
   },
-  "workspaces": [
-    "packages/*",
-    "apps/*"
-  ],
   "devDependencies": {
-    "turbo": "^2.2.3"
+    "@types/node": "^22.13.4",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitest/coverage-v8": "3.0.6",
+    "jsdom": "^26.0.0",
+    "prettier": "^3.5.1",
+    "turbo": "^2.4.2",
+    "typescript": "5.7.3",
+    "vitest": "^3.0.6"
   },
   "dependencies": {
-    "@changesets/cli": "^2.27.9",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "next": "15.1.7",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }

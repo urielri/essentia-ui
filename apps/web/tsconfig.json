@@ -1,26 +1,27 @@
 {
+  "extends": "@repo/typescript-config/nextjs.json",
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
     "plugins": [
       {
         "name": "next"
       }
     ],
     "paths": {
-      "@/*": ["./*"]
-    },
-    "target": "ES2022"
+      "#pages/*": ["./components/flows/pages/*"],
+      "#components/*": ["./components/*"],
+      "#services/*": ["./services/*"],
+      "#app/*": ["./app/*"],
+      "#state": ["./state"],
+      "#state/*": ["./state/*"],
+      "#functions": ["./functions/index.ts"],
+      "#types": ["./types/index.ts"],
+      "#icons": ["./icons/index.ts"],
+      "#hooks": ["./hooks/index.ts"],
+      "#hooks/*": ["./hooks/*"],
+      "#utils": ["./components/utils/index.ts"],
+      "#actions/*": ["./app/actions/*"],
+      "#flows/*": ["./components/flows/*"]
+    }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
