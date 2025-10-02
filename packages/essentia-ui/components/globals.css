@@ -1,0 +1,206 @@
+/**
+ * TODO: Agregar el color DISABLED y sus variantes.
+ *
+ * WARNING: No tomar con exactitud los nombres comentados, son los de figma
+ * NOTE: En serio, los nombres de figma marean. Los dejo como referencia. Los nombres de las variables tratan de ser lo mas generico posible. Chequear dos veces
+ */
+:root {
+  --u-size: 8px;
+  --u-device-mobile: 320px;
+  --u-device-desktop: 1024px;
+  --u-brand-personal: hsla(204, 100%, 39%, 1);
+  --u-standard: hsla(
+          204,
+          100%,
+          39%,
+          1
+  ); /** 🌞 PERSO Light/🟧 Background/Button/Button Primary Enabled */
+  --u-standard-01: rgba(
+          1,
+          95,
+          178,
+          1
+  ); /** 🌞 PERSO Light/🟧 Background/Button/Button Primary Hover */
+  --u-standard-02: rgba(
+          8,
+          77,
+          139,
+          1
+  ); /** 🌞 PERSO Light/🟧 Background/Button/Button Primary Pressed */
+  --u-standard-03: rgba(
+          232,
+          248,
+          255,
+          1
+  ); /** 🌞 PERSO Light/🟧 Background/Chip/Chip Default Hover */
+  --u-standard-04: rgba(
+          200,
+          238,
+          255,
+          1
+  ); /** 🌞 PERSO Light/🟧 Background/Chip/Chip Default Pressed */
+  --u-standard-05: rgba(
+          0,
+          118,
+          199,
+          1
+  ); /**  🌞 PERSO Light/🟦 Border/General/General Focus */
+
+  --u-informative: rgba(232, 248, 255, 1); /**  informative soft background */
+  --u-informative-01: rgba(148, 222, 255, 1); /** informative soft border */
+  --u-success: rgba(1, 137, 61, 1);
+  --u-success-01: rgba(0, 110, 47, 1); /** Oscuro */
+  --u-success-02: rgba(0, 83, 34, 1); /** Oscuro */
+  --u-success-03: rgba(244, 255, 241, 1); /** Claro */
+  --u-success-04: rgba(206, 249, 213, 1); /** Claro */
+  --u-success-05: rgba(131, 241, 157, 1);
+  --u-delete: rgba(186, 27, 27, 1);
+  --u-delete-01: rgba(147, 0, 6, 1); /** Oscuro */
+  --u-delete-02: rgba(104, 0, 3, 1); /** Oscuro */
+  --u-delete-03: rgba(255, 246, 246, 1); /** Claro */
+  --u-delete-04: rgba(255, 237, 233, 1); /** Claro */
+  --u-delete-05: rgba(255, 180, 169, 1);
+  --u-warning: rgba(
+          251,
+          188,
+          41,
+          1
+  ); /** 🌞 PERSO Light/🟧 Background/Semantic/Warning Bold */
+  --u-warning-01: rgba(255, 239, 211, 1);
+  --u-warning-02: rgba(255, 222, 158, 1);
+  --u-neutral: rgba(
+          94,
+          94,
+          98,
+          1
+  ); /** 🌞 PERSO Light/🟧 Background/Semantic/Neutral Bold */
+  --u-neutral-01: rgba(240, 239, 241, 1);
+  --u-neutral-02: rgba(227, 225, 230, 1);
+  --u-black: rgba(48, 48, 51, 1);
+  --u-white: rgba(255, 255, 255, 1);
+  --u-text-primary: var(
+          --u-black
+  ); /** 🌞 PERSO Light/🟨 Text-Icon/General/Text-Icon General Paragraph */
+  --u-text-primary-01: rgba(
+          255,
+          255,
+          255,
+          1
+  ); /**🌞 PERSO Light/🟨 Text-Icon/On Button BG/Text Icon On  Primary Standard Button BG */
+  --u-text-heading: rgba(
+          5,
+          44,
+          80,
+          1
+  ); /** 🌙 *PERSO Dark/🟨 Text-Icon/General/Text Icon General Heading */
+  --u-border: rgba(
+          148,
+          222,
+          255,
+          1
+  ); /** 🌞 PERSO Light/🟦 Border/Alert/Informative */
+  --u-divider: #e3e1e6; /** 🌞 PERSO Light/🟥 Divider/General/General Soft */
+  --u-general-paragraph: #303033; /** 🌞 PERSO Light/🟨 Text-Icon/General/Text-Icon General Paragraph */
+
+  /* Cyan */
+  --cyan20: #052c50;
+  --cyan50: #0076c7;
+  --cyan90: #94DEFF;
+  --cyan95: #c8eeff;
+  --cyan99: #e8f8ff;
+
+  /* Green */
+  --green50: #01893d;
+
+  /* Red */
+  --red50: #dd3730;
+  --red40: #ba1b1b;
+
+  /* Magenta */
+  --magenta50: #cb437f;
+
+  /* Yellow */
+  --yellow50: #9a6f01;
+
+  /* Gray */
+  --gray10: #222222;
+  --gray20: #303033;
+  --gray40: #5e5e62;
+  --gray50: #77767a;
+  --gray60: #919094;
+  --gray70: #acabaf;
+  --gray90: #e3e1e6;
+  --gray95: #f0eff1;
+
+  /* Gradient */
+  --gradient-default: linear-gradient(90deg, #e8f8ff 0.32%, #fff 99.69%);
+  --gradient-secondary: linear-gradient(90deg, #defff3 0.32%, #fff 99.69%);
+  --gradient-tertiary: linear-gradient(90deg, #f9f4ff 0.32%, #fff 99.69%);
+  --gradient-quarternary: linear-gradient(90deg, #fff4f9 0.32%, #fff 99.69%);
+
+  /**
+    spacing vars
+    [Figma](https://www.figma.com/design/vqyVJTO7Ktwg9ebif43EY1/%E2%9D%84%EF%B8%8F-Freeze-NOVA%3A-Foundations?node-id=17874-16269&node-type=canvas&t=3hOLrvLxsuIAueAz-0)
+  */
+  --spacing-2xs: 4px;
+  --spacing-xs: 8px;
+  --spacing-s: 12px;
+  --spacing-m: 16px;
+  --spacing-l: 20px;
+}
+/* --u Hace referencia a consts, desde el inspector se podra diferenciar de otras variables declaradas en :root */
+button {
+  all: unset;
+}
+
+a {
+  all: unset;
+}
+
+.icon-s,
+.icon-s svg {
+  width: 16px;
+  height: 16px;
+}
+
+.icon-m,
+.icon-m svg {
+  width: 16px;
+  height: 16px;
+}
+
+.icon-l,
+.icon-l svg {
+  width: 18px;
+  height: 26px;
+}
+
+.icon-xl,
+.icon-xl svg {
+  width: 30px;
+  height: 30px;
+}
+
+.text-xs {
+  font-size: 12px;
+  line-height: 16px;
+}
+.text-s {
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.text-m {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.text-l {
+  font-size: 18px;
+  line-height: 26px;
+}
+
+.text-xl {
+  font-size: 24px;
+  line-height: 32px;
+}

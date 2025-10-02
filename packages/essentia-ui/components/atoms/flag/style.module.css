@@ -1,0 +1,40 @@
+.flag {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 22px;
+    text-align: left;
+    padding: 4px 12px;
+    border-radius: 0px 0px 12px 12px;
+    width: fit-content;
+    min-width: 58px;
+    max-width: 280px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.flag-primary-soft {
+    background-color: #C8EEFF;
+    color: #052C50;
+}
+.flag-primary-bold {
+    background-color: #94DEFF;
+    color: #052C50;
+}
+.flag-secondary-soft {
+    background-color: #E4D7FF;
+    color: #4E26B1;
+}
+.flag-secondary-bold {
+    background-color: #6744CA;
+    color: #FFFFFF;
+}
+.flag-tertiary-soft {
+    background-color: #FFD9E5;
+    color: #AB2966;
+}
+.flag-tertiary-bold {
+    background-color: #AB2966;
+    color: #FFFFFF;
+}
+

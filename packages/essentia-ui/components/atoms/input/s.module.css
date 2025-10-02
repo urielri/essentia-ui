@@ -1,0 +1,88 @@
+.input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  outline: none;
+}
+.input input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.input input {
+  all: unset;
+  box-sizing: border-box;
+  border-radius: var(--i-size);
+  cursor: text;
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+.s {
+  height: 36px;
+  width: fit-content;
+  max-width: 240px;
+}
+.s input {
+  padding: calc(var(--i-size) * 1.5) calc(var(--i-size) * 2);
+  font-size: 12px;
+}
+.m {
+  width: fit-content;
+  max-width: 320px;
+  height: 46px;
+}
+.m input {
+  font-size: 16px;
+  padding: 0 calc(var(--i-size) * 3);
+}
+
+.l input {
+  padding: calc(var(--i-size) * 2.5) calc(var(--i-size) * 4.5);
+}
+.l input {
+  font-size: 22px;
+}
+
+.auto {
+  min-height: 36px;
+  width: 100%;
+  height: auto;
+}
+.auto input {
+  padding: 0 calc(var(--i-size) * 2);
+  min-height: 36px;
+  height: 100%;
+  width: 100%;
+}
+
+.default input {
+  background-color: var(--i-white);
+  border: 1px solid var(--i-grey);
+
+  color: var(--i-black-c);
+}
+.default input::placeholder {
+  text-decoration: overline;
+  user-select: none;
+  color: var(--i-grey-b);
+}
+.default input:focus {
+  border-color: var(--i-grey-c);
+  color: var(--i-black-b);
+}
+
+.bordered input {
+  background-color: transparent;
+  border: 1px solid var(--i-grey-c);
+  color: var(--i-grey);
+}
+
+.input input::-webkit-outer-spin-button,
+.input input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.input input[type="number"] {
+  -moz-appearance: textfield;
+}

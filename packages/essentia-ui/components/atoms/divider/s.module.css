@@ -1,0 +1,6 @@
+.divider {
+  display: flex;
+  height: 1px;
+  width: 100%;
+  background-color: var(--u-divider);
+}

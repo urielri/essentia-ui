@@ -1,0 +1,49 @@
+.label {
+  --color: rgba(119, 118, 122, 1);
+  all: unset;
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--size);
+  width: auto;
+  height: auto;
+}
+.label .title {
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--color);
+  cursor: pointer;
+}
+.label .title .important {
+  color: var(--u-delete);
+}
+.error {
+  overflow: hidden;
+}
+.error small {
+  font-size: 13px;
+  color: var(--color);
+  flex: 2;
+}
+
+.error {
+  color: var(--ui-error);
+  border: 1px solid var(--ui-error);
+}
+
+.error > .icon {
+  background-color: var(--ui-error);
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 100%;
+}
+.icon svg {
+  width: 18px;
+  height: 18px;
+}
+.icon svg path {
+  fill: var(--white);
+}

@@ -1,0 +1,128 @@
+/* Default styles for checkbox */
+
+/* Enabled state */
+.checkbox, .checkbox-disabled {
+  appearance: none;
+  border-radius: 4px;
+  width: 19px;
+  height: 19px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  position: relative;
+  margin: 10px;
+  cursor: pointer;
+}
+.checkbox {
+  border: 1px solid #0076C7;
+  cursor: pointer;
+  background-color: #ffffff;
+}
+
+/* Enabled and selected state */
+.checkbox:checked {
+  background-color: #0076C7;
+  border: 1px solid #0076C7;
+}
+
+/* Enabled and unselected state */
+.checkbox:not(:checked) {
+  background-color: #ffffff;
+}
+
+/* Add checkmark using pseudo-element */
+.checkbox:checked::after,
+.checkbox-disabled:checked::after {
+  content: '';
+  display: block;
+  width: 4px;  
+  height: 9px;
+  border: solid white;
+  border-width: 0 1px 1px 0;
+  transform: rotate(45deg);
+  position: absolute;
+  top: 15%;
+  left: 40%; 
+}
+
+/* Hover state */
+.checkbox:hover{
+  background-color: transparent;
+  cursor: pointer;
+}
+.checkbox:checked:hover {
+  background-color: #0076C7;
+}
+/* Estilos para el contenedor del checkbox */
+.checkbox-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; 
+  height: 40px;
+  border-radius: 50%; 
+  position: relative; 
+}
+.checkbox-container:hover {  
+  background-color: rgba(148, 222, 255, 0.7);
+}
+
+/* Focus and Pressed state */
+.checkbox-container input:focus,
+.checkbox-container input:active {
+  border: 1px solid #0076C7;
+}
+.checkbox-container:focus-within {
+  background-color: transparent;
+  border: 1px solid #0076C7;
+}
+.checkbox-container:active:not(:checked){
+  background-color: rgba(148, 222, 255, 0.4);
+  border: none;
+}
+/* .checkbox:active:checked{
+  border: 1px solid #0076C7;
+}
+.checkbox:active:not(:checked){
+  background-color: transparent;
+} */
+
+/* Disabled and unselected state */
+.checkbox-disabled {
+  border: 1px solid #ACABAF;
+  background-color: transparent;
+  cursor: not-allowed;
+}
+.checkbox-container-disabled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; 
+  height: 40px;
+  border-radius: 50%; 
+  position: relative; 
+  background-color: transparent;
+}
+
+/* Disabled and selected state */
+.checkbox-disabled:checked {
+  background-color: #ACABAF;
+}
+.checkbox-disabled:checked::after {
+  border-color: #5E5E62;
+}
+
+/* Section and label styles */
+.checkbox-section {
+  display: flex;
+  align-items: center;
+}
+
+.label {
+  margin-left: 4px;
+}
+
+.label-text {
+  font-size: 14px;
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@repo/godoy",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test:puma": "vitest"
+  },
+  "exports": {
+    ".": "./index.ts"
+  },
+  "devDependencies": {
+    "@repo/vite-config": "workspace:*",
+    "@testing-library/react": "16.2.0"
+  }
+}

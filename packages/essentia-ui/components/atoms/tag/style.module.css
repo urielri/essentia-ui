@@ -1,0 +1,143 @@
+.tag {
+  width: auto;
+  display: flex;
+  gap: 4px;
+  padding: 2px 8px;
+  align-items: center;
+  border-radius: 28px;
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.tag-primary-soft {
+  background-color: #c8eeff;
+  color: #052c50;
+}
+
+.tag-primary-soft svg path {
+  fill: #052c50;
+}
+
+.tag-primary-bold {
+  background-color: #94deff;
+  color: #052c50;
+}
+
+.tag-primary-bold svg path {
+  fill: #052c50;
+}
+
+.tag-secondary-soft {
+  background-color: #e4d7ff;
+  color: #4e26b1;
+}
+
+.tag-secondary-soft svg path {
+  fill: #4e26b1;
+}
+
+.tag-secondary-bold {
+  background-color: #4e26b1;
+  color: #eee;
+}
+
+.tag-secondary-bold svg path {
+  fill: #eee;
+}
+
+.tag-tertiary-soft {
+  background-color: #ffd9e5;
+  color: #ab2966;
+}
+
+.tag-tertiary-soft svg path {
+  fill: #ab2966;
+}
+
+.tag-tertiary-bold {
+  background-color: #ab2966;
+  color: #ffffff;
+}
+
+.tag-tertiary-bold svg path {
+  fill: #ffffff;
+}
+
+.tag-warning-soft {
+  background-color: #ffefd3;
+  color: #271900;
+}
+
+.tag-warning-soft svg path {
+  fill: #271900;
+}
+
+.tag-warning-bold {
+  background-color: #fbbc29;
+  color: #271900;
+}
+
+.tag-warning-bold svg path {
+  fill: #271900;
+}
+
+.tag-success-soft {
+  background-color: #cef9d5;
+  color: #002109;
+}
+
+.tag-success-soft svg path {
+  fill: #002109;
+}
+
+.tag-success-bold {
+  background-color: #006e2f;
+  color: #ffffff;
+}
+
+.tag-success-bold svg path {
+  fill: #ffffff;
+}
+
+.tag-error-soft {
+  background-color: #ffdad4;
+  color: #410001;
+}
+
+.tag-error-soft svg path {
+  fill: #410001;
+}
+
+.tag-error-bold {
+  background-color: #ba1b1b;
+  color: #ffffff;
+}
+
+.tag-error-bold svg path {
+  fill: #ffffff;
+}
+
+.tag-neutral-soft {
+  background-color: #f0eff1;
+  color: #46464a;
+}
+
+.tag-neutral-soft svg path {
+  fill: #46464a;
+}
+
+.tag-neutral-bold {
+  background-color: #5e5e62;
+  color: #ffffff;
+}
+
+.tag-neutral-bold svg path {
+  fill: #ffffff;
+}
+
+@media screen and (min-width: 320px) {
+  .tag {
+    font-size: 12px;
+    line-height: 16px;
+  }
+}

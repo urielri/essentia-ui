@@ -1,0 +1,293 @@
+.button,
+.link {
+  --height: 40px;
+  --width: 392px;
+  --padding: 8px calc(var(--u-size) * 2);
+  --disabled: rgba(227, 225, 230, 1);
+  --background: var(--u-standard);
+  --hover: var(--u-standard);
+  --focus: var(--u-standard);
+  --color: var(--u-text-primary-01);
+  --border: transparent;
+  display: flex;
+  box-sizing: border-box;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  gap: var(--u-size);
+  transition: all 0.2s ease-out;
+  cursor: pointer;
+  min-width: 91px;
+  width: fit-content;
+  min-height: var(--height);
+  height: var(--height);
+  max-height: var(--height);
+  padding: var(--padding);
+  border-radius: 4px;
+  background-color: var(--background);
+  transition: all 0.2s ease-out;
+  text-decoration: none;
+  border: 1px solid var(--border);
+}
+
+.button span {
+  color: var(--color);
+}
+
+.link span {
+  color: var(--color);
+}
+
+.button:hover {
+  --background: var(--hover);
+}
+
+.button:focus {
+  --background: var(--focus);
+}
+
+.link:active {
+  --background: var(--focus);
+}
+
+/** Focus para accesibilidad */
+.button:focus-visible {
+  outline: 2px solid var(--u-standard);
+  outline-offset: 2px;
+  background-color: var(--background);
+  border-radius: 6px;
+}
+
+.disabled {
+  cursor: default;
+}
+
+.disabled:active {
+  --background: var(--gray95)
+}
+
+.square {
+  min-width: fit-content;
+  max-width: var(--height);
+}
+
+.circle {
+  border-radius: 48px;
+  /** utilizamos el valor de height para que tanto en s,m,l se comporte como un circulo */
+  padding: 0;
+  min-width: var(--height);
+  width: var(--height);
+  height: var(--height);
+}
+.circle svg {
+  width: 24px;
+  height: 24px;
+}
+
+.s {
+  --padding: 8px calc(var(--u-size) * 2);
+  font-size: 16px;
+}
+
+.m,
+.l {
+  --padding: 0 calc(var(--u-size) * 3);
+  --height: 48px;
+  font-size: 16px;
+}
+
+.m {
+  max-width: 224px;
+}
+
+.l {
+  max-width: 320px;
+}
+
+.icon-s,
+.icon-m,
+.icon-l {
+  width: 16px;
+  height: 16px;
+}
+
+.icon-s svg {
+  width: 100%;
+  height: 100%;
+}
+
+.icon-m svg {
+  width: 100%;
+  height: 100%;
+}
+
+.icon-l svg {
+  width: 100%;
+  height: 100%;
+}
+
+.primary-default svg path {
+  fill: #fff;
+}
+.primary-success svg path {
+  fill: #fff;
+}
+.primary-delete svg path {
+  fill: #fff;
+}
+
+.primary-default {
+  --hover: var(--u-standard-01);
+  --focus: var(--u-standard-02);
+  --background: var(--u-standard);
+}
+
+.primary-success {
+  --background: var(--u-success);
+  --hover: var(--u-success-01);
+  --focus: var(--u-success-02);
+}
+
+.primary-delete {
+  --background: var(--u-delete);
+  --hover: var(--u-delete-01);
+  --focus: var(--u-delete-02);
+}
+
+.primary-disabled {
+  --background: var(--disabled);
+  --hover: var(--disabled);
+}
+.primary-disabled span {
+  --color: rgba(94, 94, 98, 1);
+}
+.primary-disabled svg path {
+  fill: rgba(94, 94, 98, 1);
+}
+
+.secondary-default {
+  --border: var(--u-standard);
+  --background: transparent;
+  --hover: var(--u-standard-03);
+  --focus: var(--u-standard-04);
+}
+.secondary-default span {
+  --color: var(--u-standard);
+}
+.secondary-default svg path {
+  fill: var(--u-standard);
+}
+
+.secondary-success {
+  --border: var(--u-success);
+  --background: transparent;
+  --hover: var(--u-success-03);
+  --focus: var(--u-success-04);
+}
+.secondary-success span {
+  --color: var(--u-success);
+}
+.secondary-success svg path {
+  fill: var(--u-success);
+}
+
+.secondary-delete {
+  --border: var(--u-delete);
+  --background: transparent;
+  --hover: var(--u-delete-03);
+  --focus: var(--u-delete-04);
+}
+.secondary-delete span {
+  --color: var(--u-delete);
+}
+.secondary-delete svg path {
+  fill: var(--u-delete);
+}
+
+.secondary-disabled {
+  --border: rgba(172, 171, 175, 1);
+  --background: transparent;
+  --hover: ;
+  --focus: ;
+}
+.secondary-disabled span {
+  --color: rgba(172, 171, 175, 1);
+}
+.secondary-disabled svg path {
+  fill: rgba(172, 171, 175, 1);
+}
+
+.tertiary-default {
+  --border: none;
+  --background: transparent;
+  --hover: var(--u-standard-03);
+  --focus: var(--u-standard-04);
+}
+.tertiary-default span {
+  --color: var(--u-standard);
+}
+.tertiary-default svg path {
+  fill: var(--u-standard);
+}
+
+.tertiary-success {
+  --border: none;
+  --background: transparent;
+  --hover: var(--u-success-03);
+  --focus: var(--u-success-04);
+}
+.tertiary-success span {
+  --color: var(--u-success);
+}
+.tertiary-success svg path {
+  fill: var(--u-success);
+}
+
+.tertiary-delete {
+  --border: none;
+  --background: transparent;
+  --hover: var(--u-delete-03);
+  --focus: var(--u-delete-04);
+}
+.tertiary-delete span {
+  --color: var(--u-delete);
+}
+.tertiary-delete svg path {
+  fill: var(--u-delete);
+}
+
+.tertiary-disabled {
+  --background: transparent;
+  --hover: ;
+  --focus: ;
+}
+.tertiary-disabled span {
+  --color: rgba(172, 171, 175, 1);
+}
+.tertiary-disabled svg path {
+  fill: rgba(172, 171, 175, 1);
+}
+
+.loading [class="primary"] svg path {
+  fill: var(--i-white);
+}
+
+@media screen and (min-width: 320px) {
+  .button,
+  .link {
+    --height: 40px;
+  }
+}
+@media screen and (min-width: 1024px) {
+  .button,
+  .link {
+    --height: 48px;
+    --width: 392px;
+  }
+}
+
+@media (hover: hover) {
+  .link:hover {
+    --background: var(--hover);
+  }
+}

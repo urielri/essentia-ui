@@ -1,0 +1,98 @@
+/* Default styles for radio */
+
+/* Estilos para el contenedor del radio */
+.radio-container, .radio-container-disabled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; 
+  height: 40px;
+  border-radius: 50%; 
+  position: relative;   
+}
+
+/* Enabled state */
+.radio, .radio-disabled {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #0076C7;
+  border-radius: 50%;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  display: inline-block;
+}
+
+/* Inner circle for checked state */
+.radio::before, .radio-disabled::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  background-color: #0076C7;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.radio:checked::before {
+  opacity: 1;
+}
+
+  /* Hover state */
+.radio:hover {
+  border-color: #0076C7;
+}
+.radio-container:hover {  
+  background-color: rgba(148, 222, 255, 0.7);
+}
+
+/* Focus and Pressed state */
+.radio-container input:focus,
+.radio-container input:active {
+  border: 1px solid #0076C7;
+}
+.radio-container:focus-within {
+  background-color: transparent;
+  border: 1px solid #0076C7;
+}
+.radio-container:active:not(:checked){
+  background-color: rgba(148, 222, 255, 0.4);
+  border: none;
+}
+
+/* Disabled and unselected state */
+.radio-disabled {
+  border: 1px solid #ACABAF;
+  cursor: not-allowed;
+  background-color: transparent;
+}
+.radio-disabled:checked::before {
+  background-color: #E3E1E6;
+}
+
+.radio-disabled:checked::before {
+  opacity: 1;
+}
+
+.radio-container-disabled {
+  background-color: transparent;
+}
+
+/* Section and label styles */
+.radio-section {
+  display: flex;
+  align-items: center;
+}
+
+.label {
+  margin-left: 4px;
+}
+
+.label-text {
+  font-size: 14px;
+}

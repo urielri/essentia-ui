@@ -1,0 +1,23 @@
+.root {
+  --text-size: 12px;
+  display: grid;
+  grid-auto-rows: auto;
+  height: min-content;
+  overflow: hidden;
+}
+
+.flex {
+  display: flex;
+  width: 100%;
+  height: auto;
+}
+
+.text {
+  color: var(--u-text-primary-01);
+  font-size: var(--text-size);
+}
+
+.icon {
+  display: grid;
+  align-items: center;
+}

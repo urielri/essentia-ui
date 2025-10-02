@@ -1,55 +1,27 @@
-"use client";
-
 import type {
+  ButtonHTMLAttributes,
+  DetailedHTMLProps,
   FC,
   PropsWithChildren,
-  DetailedHTMLProps,
-  ButtonHTMLAttributes,
-  CSSProperties,
   ReactNode,
 } from "react";
-import {
-  Button as ButtonParticle,
-  Icon,
-  Icon as IconParticle,
-  Root,
+import { memo } from "react";
+
+import Spinner from "#components/atoms/spinner/c";
+import { Icon, Text } from "#components/internal/particles";
+import type {
+  ButtonProps,
+  Priority,
+  Shape,
   Sizes,
-  Text,
-} from "../../core/particles";
-import { ParticlesKeys } from "../../core/particles/rules";
-import { Priority, Shape, Size, State } from "../../../types";
-//import s from "./s.module.css";
-
-export type ButtonProps = {
-  size?: Size;
-  loading?: boolean;
-  width?: CSSProperties["width"] | number;
-  height?: CSSProperties["height"] | number;
-  shape?: Shape;
-  svgOnly?: boolean;
-  prefix?: ReactNode;
-  suffix?: ReactNode;
-  style?: Omit<CSSProperties, "height" | "width">;
-};
-
-type Base<HTML = HTMLDivElement, Extension = {}> = PropsWithChildren<
-  HTML & Extension
->;
+  State,
+} from "../../internal/types";
+import s from "./s.module.css";
 
 /**
- * Properties
- *
- * type
- * svgOnly?
- * shape?
- * children
- * size?
- * loading?
- * shadow?
- * prefix?
- * suffix?
- * DetailsHTMLAttributes (aria-*, data-*, events)
- *
+ * PERF: Fully optimized :)
+ * WARNING: Puede haber probabilidad de que hayan estilos que no se visualicen, esto es porque se puede estar usando
+ * una version del navegador que no admita css nesting (chrome <= 111) [ver aqui](https://caniuse.com/css-nesting)
  */
 
 type ButtonHTML = DetailedHTMLProps<
@@ -77,7 +49,7 @@ export function buildClassName(
   componentClassName: string,
   disabled: boolean,
   customClassName: string,
-  size: Size,
+  size: Sizes,
   shape: Shape | null,
   priority: Priority,
   state: State,
@@ -143,7 +115,7 @@ export function buildChildren(
   suffix: ReactNode,
   loading: boolean,
   shape: Shape | null,
-  size: Size,
+  size: Sizes,
 ): ReactNode {
   let component = children;
 
@@ -199,19 +171,27 @@ export function buildChildren(
   return component;
 }
 
-export const Button: FC<PropsWithChildren<Props>> = ({
-  suffix,
-  prefix,
-  svgOnly = false,
+/**
+ * Button Component
+ *
+ */
+const Button: FC<PropsWithChildren<Props>> = ({
   children,
-  loading,
+  size = "m",
+  width,
+  height,
+  loading = false,
+  style,
+  prefix,
+  suffix,
+  svgOnly = false,
+  shape = null,
+  className = "",
   disabled: disabledProp,
-  shape,
-  size,
+  priority = "primary",
+  state = "default",
   ...rest
 }) => {
-  let exclude: ParticlesKeys[] = [];
-
   /**
    * Si loading es true y disabled false,
    * automaticamente disabled va a ser true
@@ -226,27 +206,26 @@ export const Button: FC<PropsWithChildren<Props>> = ({
   if (shape && svgOnly && typeof children === "string")
     throw new Error("Children debe ser Element si shape no es null");
 
-  if (svgOnly) exclude.push("text");
-  if (svgOnly && typeof children === "string")
-    throw new Error("Children cannot be string if svgOnly's true");
-  if (!suffix && !prefix) exclude.push("icon");
-
   return (
-    <Root role="b">
-      {prefix && <IconParticle>{prefix}</IconParticle>}
-      <ButtonParticle {...rest} style={{ background: "red" }}>
-        {svgOnly ? (
-          <IconParticle>{children}</IconParticle>
-        ) : (
-          <Text>{children as string}</Text>
-        )}
-      </ButtonParticle>
-      {suffix && <IconParticle>{suffix}</IconParticle>}
-      <Sizes exclude={exclude} />
-    </Root>
+    <button
+      {...rest}
+      role="button"
+      disabled={disabled}
+      className={buildClassName(
+        s.button,
+        disabled || false,
+        className,
+        size,
+        shape,
+        priority,
+        state,
+        loading,
+      )}
+      {...{ style: { ...style, width, height } }}
+    >
+      {buildChildren(children, svgOnly, prefix, suffix, loading, shape, size)}
+    </button>
   );
 };
 
-const Spinner: FC = () => {
-  return <span className={s.spn}></span>;
-};
+export default memo(Button);
