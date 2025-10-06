@@ -9,6 +9,6 @@
       "#icons": ["./components/icons/index.tsx"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "css.d.ts", "vite.config.js"],
   "exclude": ["node_modules", "dist"]
 }

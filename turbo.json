@@ -8,6 +8,10 @@
       "persistent": false,
       "cache": true
     },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
     "lint": {
       "dependsOn": ["^lint"]
     },
@@ -27,9 +31,9 @@
       "cache": false,
       "persistent": true
     },
-    "dev": {
-      "cache": false,
-      "persistent": true
+
+    "build:ui": {
+      "cache": false
     }
   }
 }

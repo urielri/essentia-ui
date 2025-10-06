@@ -8,7 +8,6 @@
     ],
     "paths": {
       "#pages/*": ["./components/flows/pages/*"],
-      "#components/*": ["./components/*"],
       "#services/*": ["./services/*"],
       "#app/*": ["./app/*"],
       "#state": ["./state"],
@@ -20,6 +19,7 @@
       "#hooks/*": ["./hooks/*"],
       "#utils": ["./components/utils/index.ts"],
       "#actions/*": ["./app/actions/*"],
+      "#components/*": ["../../packages/ui/components/*"],
       "#flows/*": ["./components/flows/*"]
     }
   },

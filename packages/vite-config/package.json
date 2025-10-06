@@ -4,8 +4,14 @@
   "type": "module",
   "version": "0.0.0",
   "exports": {
-    "./next": "./next.js",
-    "./general": "./general.js"
+    "./general": {
+      "types": "./general.d.ts",
+      "default": "./general.js"
+    },
+    "./next": {
+      "types": "./next.d.ts",
+      "default": "./next.js"
+    }
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4"

@@ -3,5 +3,5 @@
 .git/
 dist/
 results/
-packages/ui/
+packages/ui-old/
 node_modules/

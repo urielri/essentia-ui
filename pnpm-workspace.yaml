@@ -1,4 +1,10 @@
 packages:
-  - "apps/*"
-  - "packages/*"
-  - "!**/test/**"
+  - apps/*
+  - packages/*
+  - '!**/test/**'
+
+ignoredBuiltDependencies:
+  - core-js-pure
+  - esbuild
+  - sharp
+  - unrs-resolver

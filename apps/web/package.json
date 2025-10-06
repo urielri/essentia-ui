@@ -7,18 +7,18 @@
     "dev:web": ". ./env.sh && next dev --turbopack",
     "build:web": "next build",
     "test:coverage": "vitest run --coverage",
-    "test:run": "vitest --run --reporter=basic --reporter=html --outputFile=./results/index.html",
+    "test:run": "vitest --run --reporter=basic --reporter=html --outputfile=./results/index.html",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "devDependencies": {
-    "essentia-ui": "workspace:*",
     "@eslint/eslintrc": "^3",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@repo/vite-config": "workspace:*",
     "@repo/prettier-config": "workspace:*",
+    "@repo/ui": "workspace:*",
     "eslint": "^9",
     "eslint-config-next": "15.1.4"
   }
