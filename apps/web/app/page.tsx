@@ -1,4 +1,5 @@
 import { Button, Label, Layout } from "@repo/ui";
+import Image from "next/image";
 
 async function hello() {
   let t = "";
@@ -11,18 +12,27 @@ async function hello() {
 export default async function Home() {
   const h = await hello();
   return (
-    <Layout.Root style={{ gridTemplateRows: "80px 1fr 80px" }}>
+    <Layout.Root style={{ gridTemplateRows: "80px  1fr 1fr 80px" }}>
+      <Layout.Header></Layout.Header>
       <Layout.FullWidth>
         <div
-          style={{ backgroundColor: "aliceblue", height: 60, width: "100%" }}
+          className="full-width"
+          style={{
+            backgroundColor: "aliceblue",
+            height: 900,
+            width: "100%",
+            position: "absolute",
+            top: 0,
+            left: 0,
+          }}
         >
-          <h1>{h}</h1>
+          <Image src="/hero.jpg" alt="Logo" fill objectFit="cover" />
         </div>
         <div style={{ backgroundColor: "gainsboro", height: 20 }}></div>
       </Layout.FullWidth>
       <div
         className="breakout"
-        style={{ background: "yellow", height: "100%" }}
+        style={{ background: "yellow", height: "1000px" }}
       >
         <div style={{ backgroundColor: "green" }}>
           <Button>Button</Button>

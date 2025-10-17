@@ -1,2 +1,4 @@
 import { ContentGrid, FullWidth, Root } from "./c";
-export default { Root, ContentGrid, FullWidth };
+import { Header } from "./atoms/header";
+import { Footer } from "./atoms/footer";
+export default { Root, ContentGrid, FullWidth, Header, Footer };

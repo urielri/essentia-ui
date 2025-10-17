@@ -2,8 +2,10 @@
 
 import type {
   CSSProperties,
+  DetailedHTMLProps,
   DetailsHTMLAttributes,
   FC,
+  HTMLAttributes,
   PropsWithChildren,
 } from "react";
 import { Sizes } from "../types";
@@ -116,6 +118,39 @@ export const Icon: FC<Props> = ({ children, className = "", ...rest }) => {
 export const Action: FC<Props> = ({ children, ...rest }) => {
   return (
     <div {...rest} className={s.action} data-testid="action">
+      {children}
+    </div>
+  );
+};
+
+type BrickProps = DetailedHTMLProps<
+  HTMLAttributes<HTMLDivElement>,
+  HTMLDivElement
+> & {
+  space?: Sizes;
+};
+
+export const Col: FC<PropsWithChildren<BrickProps>> = ({
+  children,
+  space = "m",
+  className = "",
+  ...rest
+}) => {
+  return (
+    <div className={`${s.col} ${className}`} data-rows={space} {...rest}>
+      {children}
+    </div>
+  );
+};
+
+export const Row: FC<PropsWithChildren<BrickProps>> = ({
+  children,
+  className = "",
+  space = "m",
+  ...rest
+}) => {
+  return (
+    <div className={`${s.row} ${className}`} data-rows={space} {...rest}>
       {children}
     </div>
   );

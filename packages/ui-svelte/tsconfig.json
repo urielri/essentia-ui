@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "incremental": true,
+    "lib": ["es2022", "DOM", "DOM.Iterable"],
+    "moduleDetection": "force",
+    "noUncheckedIndexedAccess": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
+    "allowJs": true,
+    "isolatedModules": true,
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "paths": {
+      "#lib/*": ["./src/lib/*"],
+      "#core/*": ["./src/lib/core/*"]
+    },
+    "baseUrl": ".",
+    "plugins": [
+      {
+        "name": "svelte-check"
+      }
+    ],
+    "types": ["svelte"],
+    "allowSyntheticDefaultImports": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.js",
+    "src/**/*.svelte",
+    "vite.config.ts"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
+}

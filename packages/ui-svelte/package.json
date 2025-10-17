@@ -1,0 +1,43 @@
+{
+  "name": "@repo/ui-svelte",
+  "version": "1.0.0",
+  "description": "Librería de componentes UI con Svelte para el monorepo.",
+  "type": "module",
+  "scripts": {
+    "dev:svelte": "vite build --watch",
+    "build": "vite build",
+    "build:ui-svelte": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "watch": "vite build --watch"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js",
+      "svelte": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@threlte/core": "^8.1.5",
+    "svelte": "^5.39.11",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@sveltejs/vite-plugin-svelte": "^3.0.0",
+    "@tsconfig/svelte": "^5.0.0",
+    "@types/three": "^0.180.0",
+    "svelte-check": "^3.6.0",
+    "svelte-preprocess": "^5.1.0",
+    "tslib": "^2.6.2",
+    "vite": "^5.0.0"
+  }
+}

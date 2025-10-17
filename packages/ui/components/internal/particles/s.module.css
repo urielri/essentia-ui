@@ -21,3 +21,31 @@
   display: grid;
   align-items: center;
 }
+
+.row {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: auto;
+  justify-content: flex-end;
+  padding: 0 var(--size);
+  & small {
+    color: var(--black-medium);
+  }
+}
+.row[data-rows="xs"] {
+  gap: calc(var(--size) / 2);
+}
+
+.row[data-rows="s"] {
+  gap: var(--size);
+}
+.row[data-rows="m"] {
+  gap: calc(var(--size) * 2);
+}
+
+.col {
+  display: flex;
+  width: 100%;
+  flex: 1;
+}

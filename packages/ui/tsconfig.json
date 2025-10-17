@@ -6,6 +6,7 @@
     "rootDir": ".",
     "paths": {
       "#components/*": ["./components/*"],
+      "#internal/*": ["./components/internal/*"],
       "#icons": ["./components/icons/index.tsx"]
     }
   },

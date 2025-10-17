@@ -31,7 +31,14 @@
       "cache": false,
       "persistent": true
     },
+    "dev:svelte": {
+      "cache": false,
+      "persistent": true
+    },
 
+    "build:ui-svelte": {
+      "cache": false
+    },
     "build:ui": {
       "cache": false
     }
