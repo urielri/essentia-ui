@@ -6,21 +6,16 @@
   "scripts": {
     "dev:svelte": "vite build --watch",
     "build": "vite build",
-    "build:ui-svelte": "vite build",
-    "preview": "vite preview",
-    "check": "svelte-check --tsconfig ./tsconfig.json",
     "watch": "vite build --watch"
   },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "require": "./dist/index.cjs",
-      "import": "./dist/index.js",
       "svelte": "./dist/index.js",
       "default": "./dist/index.js"
-    },
-    "./package.json": "./package.json"
+    }
   },
+  "svelte": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"

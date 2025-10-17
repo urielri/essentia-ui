@@ -7,7 +7,8 @@
     "clean": "node --run clean --workspace=essentia-ui",
     "publish-packages": "turbo run lint test build && changeset version && changeset publish",
     "task": "./run-task.sh",
-    "clean-nm": "./clean-node_modules.sh"
+    "clean-nm": "./clean-node_modules.sh",
+    "dev:full": "turbo run watch dev:svelte --parallel"
   },
   "keywords": [],
   "author": {
@@ -53,3 +54,4 @@
     ]
   }
 }
+

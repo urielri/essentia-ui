@@ -7,10 +7,17 @@ export default defineConfig({
     fs: {
       allow: ["../../"], // Permite acceso a la raíz del monorepo
     },
+    watch: {
+      // Añade esto para forzar el polling en monorepos
+      usePolling: true,
+      interval: 100,
+    },
   },
   optimizeDeps: {
-    // Excluye tu paquete de UI para que Vite HMR detecte los cambios
-    // cuando se reconstruye en el directorio 'dist'.
     exclude: ["@repo/ui-svelte"],
+  },
+  // CRÍTICO: Esto hace que Vite observe cambios en tu paquete
+  resolve: {
+    dedupe: ["svelte"],
   },
 });

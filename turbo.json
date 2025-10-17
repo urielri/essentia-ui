@@ -12,35 +12,20 @@
       "cache": false,
       "persistent": true
     },
-    "lint": {
-      "dependsOn": ["^lint"]
-    },
-    "test:watch": {
-      "cache": false,
-      "persistent": true
-    },
-    "test": {
-      "dependsOn": ["^test"],
-      "cache": false
-    },
-    "dev:web": {
-      "cache": false,
-      "persistent": true
-    },
-    "dev:docs": {
-      "cache": false,
-      "persistent": true
-    },
     "dev:svelte": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "dependsOn": ["@repo/ui-svelte#build:ui-svelte"]
     },
-
     "build:ui-svelte": {
-      "cache": false
+      "cache": false,
+      "outputs": ["dist/**"],
+      "persistent": false
     },
-    "build:ui": {
-      "cache": false
+    "watch": {
+      "cache": false,
+      "persistent": true,
+      "outputs": ["dist/**"]
     }
   }
 }
