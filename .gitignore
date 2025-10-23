@@ -4,4 +4,6 @@
 dist/
 results/
 packages/ui-old/
+packages/ui/
+apps/web/
 node_modules/

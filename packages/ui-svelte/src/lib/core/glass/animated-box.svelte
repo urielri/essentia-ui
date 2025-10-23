@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
+  import { T, useTask } from "@threlte/core";
   import * as THREE from "three";
-  import { T } from "@threlte/core";
+  import type { Mesh } from "three";
 
   const geometry = new THREE.BoxGeometry(3, 3, 3);
   const material = new THREE.MeshNormalMaterial({
@@ -10,28 +11,24 @@
     opacity: 0.5,
   });
 
-  // 1. VARIABLE INTERMEDIA (tipo any para evitar el error de SvelteComponent)
-  // El objeto Three.js se asignará aquí
-  let meshRef: any;
+  let meshRef: Mesh | undefined = undefined;
+  export let meshReference: Mesh | undefined = undefined;
 
-  // 2. PROPIEDAD EXPUESTA: El Mesh de Three.js
-  export let meshReference: THREE.Mesh | undefined = undefined;
-
-  /**
-   * Función de actualización que GlassPlane invocará en cada cuadro.
-   */
-  export const update = (elapsed: number) => {
+  // 🔴 1. Implementar useTask para la animación del cubo
+  const { start, stop } = useTask((delta) => {
+    // delta es el tiempo transcurrido desde el último frame, ideal para rotación fluida
     if (meshRef) {
-      // Usamos meshRef para las operaciones
-      meshRef.rotation.x = elapsed * 0.5;
-      meshRef.rotation.y = elapsed * 0.3;
+      // Rotar usando delta (más preciso para animaciones independientes del framerate)
+      // Si quieres la rotación basada en el tiempo total (elapsed), usa el tiempo total
+      // de la tarea o la función runRefractionPass.
+      meshRef.rotation.x += delta * 0.5;
+      meshRef.rotation.y += delta * 0.3;
     }
-  };
+    // Dejar que useTask maneje el autoInvalidate (comportamiento por defecto)
+  });
 
-  // 3. REACTIVIDAD: Cuando meshRef recibe el objeto, actualiza la prop expuesta.
-  // Esto asegura que meshReference sea de tipo THREE.Mesh (ya que meshRef lo contiene).
   $: if (meshRef) {
-    meshReference = meshRef as THREE.Mesh;
+    meshReference = meshRef;
   }
 
   // Limpieza
@@ -41,6 +38,4 @@
   });
 </script>
 
-<!-- @ts-ignore -->
-<!-- Usamos bind:this para enlazar el objeto Three.js a meshRef -->
-<T.Mesh bind:this={meshRef} {geometry} {material} />
+<T.Mesh bind:ref={meshRef} {geometry} {material} />

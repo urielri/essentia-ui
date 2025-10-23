@@ -8,7 +8,7 @@
     "publish-packages": "turbo run lint test build && changeset version && changeset publish",
     "task": "./run-task.sh",
     "clean-nm": "./clean-node_modules.sh",
-    "dev:full": "turbo run watch dev:svelte --parallel"
+    "dev:full": "turbo run dev:svelte --parallel"
   },
   "keywords": [],
   "author": {
@@ -20,7 +20,7 @@
     "type": "git",
     "url": "https://github.com/urielri/essentia-ui"
   },
-  "packageManager": "pnpm@10.18.0",
+  "packageManager": "pnpm@10.19.0",
   "engines": {
     "node": ">=22"
   },
@@ -30,7 +30,7 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@vitest/coverage-v8": "3.2.4",
-    "jsdom": "^27.0.0",
+    "jsdom": "^27.0.1",
     "prettier": "^3.6.2",
     "turbo": "^2.5.8",
     "typescript": "5.9.3",
@@ -54,4 +54,3 @@
     ]
   }
 }
-

@@ -46,7 +46,7 @@
     </div>
 
     {#if type === "compact"}
-      <GlassBox>
+      <GlassBox className="items">
         {#each items as item}
           <Item icon={item.icon} label={item.text} ariaLabel={item.ariaLabel} />
         {/each}
@@ -58,7 +58,7 @@
         {/each}
       </div>
     {/if}
-    <GlassBox>
+    <GlassBox className="items" isSuspended>
       <Col class="menu item {type === 'compact' ? 'glass' : ''}">
         <Item
           icon={menuItem.icon}
@@ -84,7 +84,7 @@
     z-index: 100;
     transition: all var(--transition-duration) var(--transition-mode);
     position: sticky;
-    & .container {
+    & :global(.container) {
       display: flex;
       align-self: center;
       align-items: center;
@@ -92,7 +92,7 @@
       height: 100%;
       gap: calc(var(--size) * 2);
     }
-    & .items {
+    & :global(.items) {
       height: 100%;
       display: flex;
       gap: var(--size);
@@ -105,7 +105,7 @@
     top: 0px;
     border-left: none;
     border-right: none;
-    & .menu {
+    & :global(.menu) {
       border-radius: calc(var(--size) * 2);
       height: 80%;
     }
@@ -117,6 +117,7 @@
       border-radius: var(--border-radius);
     }
   }
+  /*
 
   .item {
     display: flex;
@@ -130,6 +131,7 @@
     transition: all var(--transition-duration) var(--transition-mode);
     cursor: pointer;
     & span {
+      visibility: hidden;
       color: var(--white);
       font-weight: 600;
       font-size: 14px;
@@ -145,10 +147,8 @@
     }
   }
 
+  */
   .selected {
-    background-color: var(--glass-surface);
-    border-radius: var(--border-radius);
-    backdrop-filter: blur(var(--blur));
     &:hover {
       filter: none;
     }
@@ -158,11 +158,11 @@
     width: 100%;
   }
   .logo {
-    & svg {
+    & :global(svg) {
       filter: drop-shadow(0px 0px 5px rgba(0, 0, 0, 0.7));
-    }
-    & svg path {
-      fill: var(--white);
+      & :global(path) {
+        fill: var(--white);
+      }
     }
   }
 </style>

@@ -21,11 +21,6 @@
       "cache": false,
       "outputs": ["dist/**"],
       "persistent": false
-    },
-    "watch": {
-      "cache": false,
-      "persistent": true,
-      "outputs": ["dist/**"]
     }
   }
 }

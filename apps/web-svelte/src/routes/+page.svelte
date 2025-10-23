@@ -1,5 +1,5 @@
 <script>
-  import { Layout } from "@repo/ui-svelte";
+  import { Layout, GlassBox } from "@repo/ui-svelte";
 </script>
 
 <Layout.Root style="grid-template-rows:80px 1fr 1fr 80px;">
@@ -32,6 +32,7 @@
       <button>Button</button>
     </div>
   </div>
+
   <Layout.Footer>
     <div style="background:aliceblue;height:80px;">
       <h1>full WIDTH</h1>
