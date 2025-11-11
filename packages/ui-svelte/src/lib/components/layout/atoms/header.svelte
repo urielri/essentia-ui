@@ -46,7 +46,7 @@
     </div>
 
     {#if type === "compact"}
-      <GlassBox className="items">
+      <GlassBox className="items" isSuspended>
         {#each items as item}
           <Item icon={item.icon} label={item.text} ariaLabel={item.ariaLabel} />
         {/each}

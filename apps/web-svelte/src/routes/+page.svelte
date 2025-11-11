@@ -16,6 +16,41 @@
           fill
           style="object-fit:cover; position: absolute;width: 100%;height: 100%;"
         />
+        <div style="position:relative;width:100px;height:100px;">
+          <GlassBox debug={false} captureStrategy="html">
+            <div
+              style="width: 100px; height: 100px; background: transparent;"
+            ></div>
+            <h1>Hola</h1>
+          </GlassBox>
+        </div>
+        <div
+          style="display:flex;position:sticky;top:200px;right:10px;width:300px;height:300px;"
+        >
+          <GlassBox
+            style="height: 300px;"
+            debug={false}
+            captureStrategy="html"
+            canRenderOnScroll
+          >
+            <div
+              style="width: 100px; height: 100px; background: transparent;"
+            ></div>
+
+            <h1>Hola</h1>
+          </GlassBox>
+        </div>
+      </div>
+      <div
+        style="position:absolute;top:200px;left:50%;width:300px;height:300px;transform: translateX(-50%);"
+      >
+        <GlassBox style="height: 300px;" debug={false} captureStrategy="html">
+          <div
+            style="width: 100px; height: 100px; background: transparent;"
+          ></div>
+
+          <h1>Hola</h1>
+        </GlassBox>
       </div>
     </div>
     <div style="background:gainsboro;height:20px;"></div>

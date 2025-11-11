@@ -15,8 +15,8 @@
   --black: #000;
   --black-light: #333435;
   --black-medium: #1d1d1e;
-  --blur: 12px;
-  --shadow-glass: 0px 4px 15px rgba(0, 0, 0, 0.4);
+  --blur: 8px;
+  --glass-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4);
   --glass-border: rgba(200, 200, 200, 0.2);
   --glass-surface: rgba(50, 50, 50, 0.15);
   --text: var(--black);

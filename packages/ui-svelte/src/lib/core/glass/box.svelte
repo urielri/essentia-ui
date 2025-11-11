@@ -1,41 +1,56 @@
 <script lang="ts">
   import { Canvas, T } from "@threlte/core";
-  import html2canvas from "html2canvas";
-  import { onMount, tick } from "svelte";
+  import { onMount } from "svelte";
   import * as THREE from "three";
 
-  import type {
-    CanvasTexture,
-    Mesh,
-    MeshBasicMaterial,
-    WebGLRenderer,
-  } from "three";
+  import type { CanvasTexture, Mesh, WebGLRenderer } from "three";
   import AnimatedBox from "./animated-box.svelte";
-  import GlassPlane from "./glass-plane.svelte";
-  export let isSuspended: boolean = false; // 👈 Nueva prop
-  export let distortion: number = 1.0;
-  export let className: string;
-  let activeMesh: Mesh | undefined;
-  let animatedBoxComponent: { update: (elapsed: number) => void } | undefined;
-  // Referencias esenciales
-  let backgroundContentRef: HTMLDivElement;
-  let backgroundTexture: CanvasTexture | undefined;
-  let backgroundMesh: Mesh | undefined;
-  let canvasLayerRef: HTMLDivElement | undefined;
-  // 🔴 CAMBIO: El tipo correcto debe ser HTMLCanvasElement
-  let threlteCanvas: HTMLCanvasElement | undefined;
+  import GlassBoxLogic from "./box.logic.svelte";
+  import { captureBackground, updateThreeJsPlane } from "./html2canvas-logic";
+  import TextureDebugPlane from "./texture-debug-plane.svelte";
 
+  export let isSuspended: boolean = false;
+  export let captureStrategy: "html" | "3d" = "html";
+  export let distortion: number = 9.0;
+  export let className: string = "";
+  export let style: string = "";
+  export let debug: boolean = false;
+
+  export let mouseX = 0;
+  export let mouseY = 0;
+
+  export let lookAt: boolean = true;
+  export let canRenderOnScroll: boolean = false;
+  export let canRenderOnResize: boolean = false;
+
+  export const SENSITIVITY = 0.1;
+
+  let width3D: number;
+  let height3D: number;
+
+  let activeMesh: Mesh | undefined;
+
+  let backgroundContentRef: HTMLDivElement;
+
+  let backgroundTexture: CanvasTexture | THREE.Texture | undefined;
+  let backgroundMesh: Mesh | undefined;
+
+  let canvasLayerRef: HTMLDivElement | undefined;
+  let threlteCanvas: HTMLCanvasElement | undefined;
+  let contentRef: HTMLDivElement | undefined;
+  let containerRef: HTMLDivElement | undefined;
   // ESTADO DE DEPURACIÓN Y CAPTURA
   let capturedImageURL: string | null = null;
+
   let capturedCanvas: HTMLCanvasElement | undefined = undefined;
 
+  let renderTarget: THREE.WebGLRenderTarget | null = null;
   // CONSTANTES 3D
   const CAMERA_FOV = 75;
-  const BACKGROUND_Z = -10; // Posición Z del plano de fondo. Cambiar a -5 si quieres más profundidad.
-  const CAMERA_Z = 5; // Posición Z de la cámara
+  const BACKGROUND_Z = -5; // Posición Z del plano de fondo. Cambiar a -5 si quieres más profundidad.
+  const CAMERA_Z = 0; // Posición Z de la cámara
 
   // --- Funciones de Utilidad y Inicialización ---
-
   const createTransparentRenderer = (
     canvas: HTMLCanvasElement,
   ): WebGLRenderer => {
@@ -47,110 +62,29 @@
     });
   };
 
-  /**
-   * 🔴 LÓGICA 1: CAPTURA DE HTML2CANVAS (Solo genera el Canvas 2D)
-   */
-  async function captureBackground() {
-    if (isSuspended) return; // 👈 Saltar la captura si está suspendido
-    // 🔴 CRÍTICO: Aseguramos que la referencia al canvas esté lista para ignorarla
-    if (!backgroundContentRef) return;
+  async function handleCapture() {
+    // 🔴 Uso directo de la función externa
+    const result = await captureBackground(
+      backgroundContentRef,
+      threlteCanvas,
+      isSuspended,
+      contentRef,
+    );
 
-    await tick();
-
-    try {
-      // 🔴 Se puede cambiar a document.body si backgroundContentRef sigue fallando.
-      const rect = backgroundContentRef.getBoundingClientRect();
-      const elementToCapture = document.body;
-      const canvas = await html2canvas(elementToCapture, {
-        useCORS: true,
-        allowTaint: true,
-        scrollX: window.scrollX,
-        scrollY: window.scrollY,
-        backgroundColor: null, // Asegura que no se fuerce un fondo blanco/gris
-        removeContainer: true, // Por defecto es true, pero ayuda a la claridad
-        x: rect.left + window.scrollX,
-        y: rect.top + window.scrollY,
-        width: rect.width,
-        height: rect.height,
-        ignoreElements: (element) => {
-          return element === threlteCanvas;
-        },
-      });
-
-      capturedCanvas = canvas;
-
-      // Para DEPURACIÓN: Generar una URL para mostrar la imagen en el DOM
-      capturedImageURL = canvas.toDataURL("image/png");
-    } catch (error) {
-      console.error("Error al capturar con html2canvas:", error);
+    if (result) {
+      capturedCanvas = result.canvas;
     }
   }
-
-  /**
-   * 🔴 LÓGICA 2: SINCRONIZACIÓN Y REDIMENSIONAMIENTO DE THREE.JS
-   */
-  async function updateThreeJsPlane() {
-    if (isSuspended) return;
-    console.log("updateThreeJsPlane", {
-      capturedCanvas,
-      backgroundMesh,
-      backgroundTexture,
-    });
-    if (!capturedCanvas || !backgroundMesh) return;
-    // 1. Actualiza la textura de Three.js
-    if (backgroundTexture) {
-      backgroundTexture.image = capturedCanvas;
-      backgroundTexture.needsUpdate = true;
-    } else {
-      backgroundTexture = new THREE.CanvasTexture(capturedCanvas);
-      backgroundTexture.minFilter = THREE.LinearFilter;
-      backgroundTexture.magFilter = THREE.LinearFilter;
-    }
-
-    // 2. Redimensionamiento del Plano 3D
-    const { width: pixelWidth, height: pixelHeight } = capturedCanvas;
-    const aspectRatio = pixelWidth / pixelHeight;
-    console.log("aspectRatio", aspectRatio);
-    // Distancia real entre la cámara y el plano de fondo
-    const planeDistance = Math.abs(BACKGROUND_Z - CAMERA_Z);
-    // Altura visible a esa distancia (fórmula matemática para llenar el frustum)
-    const visibleHeight =
-      2 * Math.tan(CAMERA_FOV * 0.5 * (Math.PI / 180)) * planeDistance;
-    const planeHeight = visibleHeight;
-    const planeWidth = planeHeight * aspectRatio;
-
-    console.log({
-      planeDistance,
-      visibleHeight,
-      planeHeight,
-      planeWidth,
-    });
-    // Recrear la geometría
-    backgroundMesh.geometry.dispose();
-    backgroundMesh.geometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
-
-    // Asignación de la textura
-    const material = backgroundMesh.material as MeshBasicMaterial;
-    material.map = backgroundTexture;
-    material.needsUpdate = true;
-    backgroundMesh.position.set(0, 0, BACKGROUND_Z);
-    backgroundMesh.visible = true; // Mostrar el plano de fondo
-  }
-
-  // --- Lógica de Eventos y Reactividad ---
 
   let isCapturing = false;
   const CAPTURE_THROTTLE_MS = 200;
 
   const handleEvents = async () => {
-    if (isCapturing) return;
+    if (captureStrategy !== "html") return; // Agregar condición de estrategia
 
     isCapturing = true;
 
-    // Ocultar el mesh ANTES de la captura
-    if (backgroundMesh) backgroundMesh.visible = false;
-
-    await captureBackground();
+    await handleCapture();
 
     setTimeout(() => {
       isCapturing = false;
@@ -164,83 +98,180 @@
       threlteCanvas = threlteDiv.firstChild;
 
       handleEvents(); // Iniciar la primera captura
-      window.addEventListener("scroll", handleEvents);
-      window.addEventListener("resize", handleEvents);
+      if (canRenderOnScroll) {
+        window.addEventListener("scroll", handleEvents);
+      }
+      if (canRenderOnResize) {
+        window.addEventListener("resize", handleEvents);
+      }
     }
   }
 
-  $: if (capturedCanvas && backgroundMesh) {
-    // Se ejecuta CADA VEZ que capturedCanvas se actualiza
-    updateThreeJsPlane();
-  }
-
-  onMount(() => {
-    /*
-
-    console.log("onMount", {
-      backgroundContentRef,
+  $: if (capturedCanvas && backgroundMesh && captureStrategy === "html") {
+    const newTexture = updateThreeJsPlane(
+      capturedCanvas,
       backgroundMesh,
-      backgroundTexture,
-    });
-    */
-    return () => {
-      window.removeEventListener("scroll", handleEvents);
-      window.removeEventListener("resize", handleEvents);
+      backgroundTexture as THREE.CanvasTexture | undefined,
+      CAMERA_FOV,
+      CAMERA_Z,
+      BACKGROUND_Z,
+    );
+    backgroundTexture = newTexture;
+  }
+  let zoom = CAMERA_FOV;
+  let mouseMagnitude: number = 0;
+  const handleMouseMove = (event: any) => {
+    if (!lookAt) return;
+    if (!containerRef) return;
 
+    const rect = containerRef.getBoundingClientRect();
+    // Normalizar las coordenadas del mouse a un rango de [-1, 1]
+    // Normalizar las coordenadas del mouse a un rango de [-1, 1]
+    mouseX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    // Invertimos Y para que mover el mouse hacia arriba rote el cubo hacia arriba
+    mouseY = ((event.clientY - rect.top) / rect.height) * 2 - 1;
+    const mouseDistance = Math.sqrt(mouseX * mouseX + mouseY * mouseY);
+
+    // Normalizar la distancia al rango [0, 1]
+    mouseMagnitude = Math.min(mouseDistance / 1.414, 1.0);
+
+    console.log("mouseMagnitude", mouseMagnitude);
+    zoom = CAMERA_FOV * 1.96;
+  };
+
+  const handleMouseOut = () => {
+    if (!lookAt) return;
+    if (!containerRef) return;
+    if (mouseX !== 0 || mouseY !== 0) {
+      mouseX = 0;
+      mouseY = 0;
+      //  zoom = CAMERA_FOV;
+    }
+  };
+  onMount(() => {
+    return () => {
+      if (canRenderOnScroll) {
+        window.removeEventListener("scroll", handleEvents);
+      }
+      if (canRenderOnResize) {
+        window.removeEventListener("resize", handleEvents);
+      }
       if (backgroundTexture) backgroundTexture.dispose();
     };
   });
+
+  const CONFIG_THREE_COMPONENTS = {
+    Mesh: {
+      position: [0, 0, BACKGROUND_Z],
+    },
+    AmbientLight: {
+      intensity: 0.9,
+    },
+    DirectionalLight: {
+      intensity: 1.5,
+      position: [1, 1, 1],
+    },
+    PerspectiveCamera: {
+      position: [0, 0, 5],
+      fov: CAMERA_FOV,
+    },
+    PlaneGeometry: {
+      args: [1, 1],
+    },
+  };
 </script>
 
-<div class="glass-box-container">
+<div
+  class="glass-box-container"
+  style="border-radius: var(--border-radius-container-glass-box)"
+  on:mousemove={handleMouseMove}
+  on:mouseout={handleMouseOut}
+  role="contentinfo"
+  bind:this={containerRef}
+>
   <div class="background-content" bind:this={backgroundContentRef}></div>
 
   {#if !isSuspended}
     <div class="canvas-layer" bind:this={canvasLayerRef}>
       <Canvas createRenderer={createTransparentRenderer}>
-        <T.PerspectiveCamera position={[0, 0, 5]} fov={CAMERA_FOV} />
-        <T.AmbientLight intensity={0.5} />
-        <T.DirectionalLight position={[1, 1, 1]} intensity={1.5} />
+        <T.PerspectiveCamera
+          position={CONFIG_THREE_COMPONENTS.PerspectiveCamera.position as any}
+          fov={CAMERA_FOV}
+          makeDefault={true}
+        />
+        <T.AmbientLight
+          intensity={CONFIG_THREE_COMPONENTS.AmbientLight.intensity}
+        />
+        <T.DirectionalLight
+          position={CONFIG_THREE_COMPONENTS.DirectionalLight.position as any}
+          intensity={CONFIG_THREE_COMPONENTS.DirectionalLight.intensity}
+        />
 
-        <T.Mesh bind:ref={backgroundMesh} position={[0, 0, BACKGROUND_Z]}>
-          <T.PlaneGeometry args={[1, 1]} />
-          <T.MeshBasicMaterial map={backgroundTexture} />
+        <T.Mesh
+          bind:ref={backgroundMesh}
+          position={CONFIG_THREE_COMPONENTS.Mesh.position as any}
+        >
+          <T.PlaneGeometry args={CONFIG_THREE_COMPONENTS.PlaneGeometry.args} />
+          <T.MeshBasicMaterial />
         </T.Mesh>
 
-        <AnimatedBox bind:meshReference={activeMesh} />
+        <AnimatedBox
+          bind:meshReference={activeMesh}
+          bind:width3D
+          bind:height3D
+          {mouseX}
+          {mouseMagnitude}
+          {mouseY}
+          {SENSITIVITY}
+        />
 
         {#if activeMesh && backgroundMesh}
-          <GlassPlane
+          <GlassBoxLogic
+            bind:backgroundTexture
+            bind:renderTarget
             {activeMesh}
             {distortion}
             {backgroundMesh}
-            {animatedBoxComponent}
-            {isSuspended}
+            {captureStrategy}
+            {CAMERA_FOV}
+            {BACKGROUND_Z}
+            {CAMERA_Z}
+            {mouseMagnitude}
+            bind:width3D
+            bind:height3D
           />
+        {/if}
+        {#if debug}
+          <TextureDebugPlane {backgroundTexture} scale={2.5} {CAMERA_FOV} />
         {/if}
       </Canvas>
     </div>
   {/if}
-  {#if capturedImageURL}
+
+  {#if capturedImageURL && debug}
     <img
       src={capturedImageURL}
       alt="Debug Capture"
-      style="position: fixed; bottom: 10px; left: 10px; z-index: 99999; border: 5px solid red; width: 200px; height: 150px; object-fit: cover;"
+      style="position: fixed; bottom: 10px; left: 10px; z-index: 99999; border: 5px solid red; background: white;width: 200px; height: 150px; object-fit: contain;"
     />
   {/if}
-
-  <div class={`content-layer ${className}`}>
+  <div class={`content-layer ${className}`} bind:this={contentRef} {style}>
     <slot />
   </div>
 </div>
 
 <style>
   .glass-box-container {
+    --border-radius-container-glass-box: calc(var(--size) * 2);
+    --border-container-glass-box: var(--glass-border);
+    --blur-glass: var(--blur);
     position: relative;
+    overflow: hidden;
+    user-select: none;
+    border: 2px solid var(--border-container-glass-box);
   }
 
   .background-content {
-    /* 🔴 CRÍTICO: Posicionamiento para capturar el fondo de la ventana */
     position: absolute;
     top: 0;
     left: 0;
@@ -250,15 +281,25 @@
     z-index: 0;
     pointer-events: none;
     overflow: hidden;
+    user-select: none;
   }
 
   .canvas-layer {
     position: absolute;
-    top: 0;
-    left: 0;
+    /*
+    top: 50%;
+    left: 50%;
+    width: calc(100% + 10%);
+    height: calc(100% + 10%);
+    transform: translate(-50%, -50%);
+*/
+    top: 0px;
+    left: 0px;
     width: 100%;
     height: 100%;
+
     z-index: 4;
+    user-select: none;
   }
 
   .content-layer {
@@ -268,11 +309,12 @@
     height: auto;
     z-index: 12;
     padding: 20px;
-
     overflow: hidden;
     /* Estilos Glassmorphism */
-    /*  backdrop-filter: blur(10px) saturate(180%); */
-    background-color: rgba(255, 255, 255, 0.05);
-    border-radius: 15px;
+    /*
+    backdrop-filter: blur(var(--blur-glass)) saturate(110%);
+    filter: var(--glass-shadow);
+    background-color: var(--glass-surface);
+  */
   }
 </style>
