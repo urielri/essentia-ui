@@ -17,7 +17,7 @@
           style="object-fit:cover; position: absolute;width: 100%;height: 100%;"
         />
         <div style="position:relative;width:100px;height:100px;">
-          <GlassBox debug={false} captureStrategy="html">
+          <GlassBox debug={false} captureStrategy="3d">
             <div
               style="width: 100px; height: 100px; background: transparent;"
             ></div>
@@ -25,14 +25,9 @@
           </GlassBox>
         </div>
         <div
-          style="display:flex;position:sticky;top:200px;right:10px;width:300px;height:300px;"
+          style="display:none;position:absolute;top:200px;right:10px;width:300px;height:300px;"
         >
-          <GlassBox
-            style="height: 300px;"
-            debug={false}
-            captureStrategy="html"
-            canRenderOnScroll
-          >
+          <GlassBox style="height: 300px;" debug={false} captureStrategy="3d">
             <div
               style="width: 100px; height: 100px; background: transparent;"
             ></div>
@@ -44,7 +39,7 @@
       <div
         style="position:absolute;top:200px;left:50%;width:300px;height:300px;transform: translateX(-50%);"
       >
-        <GlassBox style="height: 300px;" debug={false} captureStrategy="html">
+        <GlassBox style="height: 300px;" debug={false} captureStrategy="3d">
           <div
             style="width: 100px; height: 100px; background: transparent;"
           ></div>

@@ -46,7 +46,7 @@
     </div>
 
     {#if type === "compact"}
-      <GlassBox className="items" isSuspended>
+      <GlassBox className="items">
         {#each items as item}
           <Item icon={item.icon} label={item.text} ariaLabel={item.ariaLabel} />
         {/each}
@@ -58,7 +58,7 @@
         {/each}
       </div>
     {/if}
-    <GlassBox className="items" isSuspended>
+    <GlassBox className="items">
       <Col class="menu item {type === 'compact' ? 'glass' : ''}">
         <Item
           icon={menuItem.icon}

@@ -15,10 +15,10 @@
   --black: #000;
   --black-light: #333435;
   --black-medium: #1d1d1e;
-  --blur: 8px;
+  --blur: 2px;
   --glass-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4);
   --glass-border: rgba(200, 200, 200, 0.2);
-  --glass-surface: rgba(50, 50, 50, 0.15);
+  --glass-surface: rgba(120, 120, 120, 0.15);
   --text: var(--black);
   --text-secondary: var(--black-medium);
   --transition-mode: ease-in-out;
@@ -98,7 +98,7 @@ ul {
 
 [color-scheme="light"] {
   --glass-border: rgba(200, 200, 200, 0.2);
-  --glass-surface: rgba(50, 50, 50, 0.15);
+  --glass-surface: rgba(180, 180, 180, 0.15);
   --text: var(--black);
   --text-secondary: var(--black-medium);
 }
