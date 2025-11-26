@@ -10,7 +10,6 @@
   import { noiseVertexShader, noiseFragmentShader } from "./shaders";
   import NoisePoints from "./noise-points.svelte";
   import OutlineEffect from "./outline-effect.svelte";
-
   export let isSuspended: boolean = false;
   export let captureStrategy: "html" | "3d" = "3d";
   export let distortion: number = 9.0;
@@ -21,30 +20,24 @@
   export let mouseX = 0;
   export let mouseY = 0;
 
-  export let uLeftBorderFalloff: number = 0.1; // Extensión del degradé (0.0 a 0.5)
-  export let uRightBorderFalloff: number = 0.1;
-  export let uTopBorderFalloff: number = 0.1;
-  export let uBottomBorderFalloff: number = 0.1;
-  export let uMouseXN: number = 0.5; // 🟢 NUEVO EXPORT PARA EL SHADER
-
-  const MAX_TILT_DEG = 2;
-  let tiltX = 0;
-  let tiltY = 0;
+  export let uMouseXN: number = 0.5;
 
   export let lookAt: boolean = true;
   export let canRenderOnScroll: boolean = false;
   export let canRenderOnResize: boolean = false;
 
-  export const SENSITIVITY = 0.1;
+  export let SENSITIVITY = 0.1;
 
+  const MAX_TILT_DEG = 2;
+  let tiltX = 0;
+  let tiltY = 0;
+  let normalizedBorderRadius = 0.15; // Valor por defecto
   let width3D: number = 1;
   let height3D: number = 1;
 
-  let noiseScale = new THREE.Vector3(1, 1, 1);
-
-  $: noiseScale.set(width3D || 1, height3D || 1, 1);
-
   let activeMesh: Mesh | undefined;
+  let uFresnelPower: number = 5.0; // La dureza del brillo (más alto = más concentrado en el borde)
+  let normalRenderTarget: THREE.WebGLRenderTarget | null = null;
 
   let backgroundContentRef: HTMLDivElement;
 
@@ -60,13 +53,15 @@
 
   let capturedCanvas: HTMLCanvasElement | undefined = undefined;
 
-  let outlineRenderTarget: THREE.WebGLRenderTarget | null = null;
-
   let renderTarget: THREE.WebGLRenderTarget | null = null;
   // CONSTANTES 3D
   const CAMERA_FOV = 75;
   const BACKGROUND_Z = -5; // Posición Z del plano de fondo. Cambiar a -5 si quieres más profundidad.
   const CAMERA_Z = 0; // Posición Z de la cámara
+
+  let noiseScale = new THREE.Vector3(1, 1, 1);
+
+  $: noiseScale.set(width3D || 1, height3D || 1, 1);
 
   // --- Funciones de Utilidad y Inicialización ---
   const createTransparentRenderer = (
@@ -166,26 +161,18 @@
     */
   }
 
-  $: {
-    if (threlteCanvas && !outlineRenderTarget) {
-      outlineRenderTarget = new THREE.WebGLRenderTarget(
-        threlteCanvas.width,
-        threlteCanvas.height,
-        {
-          minFilter: THREE.LinearFilter,
-          magFilter: THREE.LinearFilter,
-          format: THREE.RGBAFormat,
-          depthBuffer: true, // ¡CRÍTICO! Necesitamos el depth buffer
-        },
-      );
-    }
-    // Asegúrate de actualizar el tamaño si el canvas cambia
-    if (outlineRenderTarget && threlteCanvas) {
-      outlineRenderTarget.setSize(threlteCanvas.width, threlteCanvas.height);
-    }
-  }
-  let zoom = CAMERA_FOV;
+  $: if (containerRef) {
+    const rect = containerRef.getBoundingClientRect();
+    const computedStyle = getComputedStyle(containerRef);
+    const radiusPx = parseFloat(computedStyle.borderRadius) || 0;
 
+    // Normalizar: divide el radio en píxeles por la dimensión más pequeña
+    const minDimension = Math.min(rect.width, rect.height);
+    normalizedBorderRadius =
+      minDimension > 0 ? (radiusPx / minDimension) * 2 : 0.15;
+  }
+
+  let zoom = CAMERA_FOV;
   let mouseMagnitude: number = 0;
   const handleMouseMove = (event: any) => {
     if (!lookAt) return;
@@ -300,19 +287,19 @@
           bind:width3D
           bind:height3D
           {mouseX}
-          {mouseMagnitude}
           {mouseY}
+          {mouseMagnitude}
           {SENSITIVITY}
         />
         <OutlineEffect
-          bind:outlineRenderTarget
+          {normalRenderTarget}
           uOutlineColor={new THREE.Vector3(1.0, 1.0, 1.0)}
           uResolution={new THREE.Vector2(
             threlteCanvas?.width,
             threlteCanvas?.height,
           )}
-          {mouseMagnitude}
           {uMouseXN}
+          {uFresnelPower}
         />
 
         {#if activeMesh && backgroundMesh}
@@ -328,14 +315,10 @@
             {CAMERA_Z}
             {mouseMagnitude}
             {mouseX}
-            {uMouseXN}
-            bind:outlineRenderTarget
+            bind:normalRenderTarget
+            bind:uMouseXN
             bind:width3D
             bind:height3D
-            bind:uLeftBorderFalloff
-            bind:uRightBorderFalloff
-            bind:uTopBorderFalloff
-            bind:uBottomBorderFalloff
           />
         {/if}
         {#if debug}
