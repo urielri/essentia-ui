@@ -22,8 +22,9 @@
   export let height3D: number = 1;
 
   export let glassMesh: Mesh | undefined = undefined;
-  export let uMouseXN: number = 0.5;
-  export let mouseX: number = 0;
+
+  export let uBoxNormalizedSize: THREE.Vector2 = new THREE.Vector2(2.0, 2.0);
+
   export let normalRenderTarget: THREE.WebGLRenderTarget | null = null;
 
   let depthMaterial = new THREE.MeshDepthMaterial();
@@ -31,7 +32,6 @@
   let staticDepthMesh: THREE.Mesh;
 
   const { size, invalidate, camera, renderer, scene } = useThrelte();
-  const MOUSE_RANGE_X = 1.0;
 
   $: distanceToBackground = Math.abs(
     (camera.current?.position.z ?? CAMERA_Z) - BACKGROUND_Z,
@@ -51,11 +51,12 @@
       backgroundMesh.scale.set(width3D, height3D, 1);
       activeMesh.scale.set(width3D, height3D, 1);
     }
+
+    uBoxNormalizedSize.set(2.0, 2.0);
   }
 
   $: if ($size.width > 0 && $size.height > 0) {
     if (captureStrategy === "3d") {
-      // ✅ Render target SIN depth texture
       if (!renderTarget) {
         renderTarget = new THREE.WebGLRenderTarget($size.width, $size.height, {
           minFilter: THREE.LinearFilter,
@@ -66,7 +67,6 @@
         renderTarget.setSize($size.width, $size.height);
       }
 
-      // ✅ La textura se usa directamente
       backgroundTexture = renderTarget.texture;
 
       const glassMaterial = activeMesh.material as THREE.ShaderMaterial;
@@ -100,14 +100,6 @@
     }
   }
 
-  $: {
-    const clampedMouseX = Math.min(
-      Math.max(mouseX, -MOUSE_RANGE_X),
-      MOUSE_RANGE_X,
-    );
-    uMouseXN = (clampedMouseX + MOUSE_RANGE_X) / (2 * MOUSE_RANGE_X);
-  }
-
   onMount(() => {
     staticDepthMesh = activeMesh.clone();
     staticDepthMesh.material = depthMaterial;
@@ -120,7 +112,6 @@
         scene.remove(staticDepthMesh);
         staticDepthMesh.geometry.dispose();
       }
-      // ✅ Limpiar recursos
       if (renderTarget) renderTarget.dispose();
       if (normalRenderTarget) normalRenderTarget.dispose();
     };
@@ -139,32 +130,34 @@
     )
       return;
 
-    // ✅ PASADA 1: Renderizar el fondo OFF-SCREEN
-    // La clave es que el glassMesh NO esté en la escena durante esta pasada
+    // PASADA 1: Renderizar el fondo
     backgroundMesh.visible = true;
     activeMesh.visible = false;
     staticDepthMesh.visible = false;
-    if (glassMesh) scene.remove(glassMesh); // ⚠️ REMOVER temporalmente de la escena
+    if (glassMesh) scene.remove(glassMesh);
 
     renderer.setRenderTarget(renderTarget);
     renderer.clear();
     renderer.render(scene, camera.current);
 
-    // ✅ PASADA 2: Renderizar normales
-    staticDepthMesh.position.copy(activeMesh.position);
-    staticDepthMesh.scale.copy(activeMesh.scale);
-    staticDepthMesh.rotation.set(0, 0, 0);
+    // PASADA 2: Renderizar normales
     staticDepthMesh.material = normalMaterial;
+
+    staticDepthMesh.position.set(0, 0, 0);
+    staticDepthMesh.scale.set(width3D, height3D, 1);
+    staticDepthMesh.rotation.set(0, 0, 0);
     staticDepthMesh.visible = true;
+
     backgroundMesh.visible = false;
+    activeMesh.visible = false;
 
     renderer.setRenderTarget(normalRenderTarget);
     renderer.clear();
     renderer.render(staticDepthMesh, camera.current);
 
-    // ✅ RESTAURAR para la pasada final (la escena principal)
+    // RESTAURAR
     renderer.setRenderTarget(null);
-    if (glassMesh) scene.add(glassMesh); // ⚠️ VOLVER a agregar a la escena
+    if (glassMesh) scene.add(glassMesh);
     staticDepthMesh.visible = false;
     backgroundMesh.visible = true;
 

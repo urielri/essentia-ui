@@ -20,15 +20,14 @@
   export let mouseX = 0;
   export let mouseY = 0;
 
-  export let uMouseXN: number = 0.5;
-
+  let uBoxNormalizedSize: THREE.Vector2 = new THREE.Vector2(2.0, 2.0);
   export let lookAt: boolean = true;
   export let canRenderOnScroll: boolean = false;
   export let canRenderOnResize: boolean = false;
 
   export let SENSITIVITY = 0.1;
 
-  const MAX_TILT_DEG = 2;
+  const MAX_TILT_DEG = 1.0;
   let tiltX = 0;
   let tiltY = 0;
   let normalizedBorderRadius = 0.15; // Valor por defecto
@@ -36,7 +35,7 @@
   let height3D: number = 1;
 
   let activeMesh: Mesh | undefined;
-  let uFresnelPower: number = 5.0; // La dureza del brillo (más alto = más concentrado en el borde)
+  let uFresnelPower: number = 0.5; // La dureza del brillo (más alto = más concentrado en el borde)
   let normalRenderTarget: THREE.WebGLRenderTarget | null = null;
 
   let backgroundContentRef: HTMLDivElement;
@@ -292,20 +291,16 @@
           {SENSITIVITY}
         />
         <OutlineEffect
-          {normalRenderTarget}
+          bind:normalRenderTarget
           uOutlineColor={new THREE.Vector3(1.0, 1.0, 1.0)}
-          uResolution={new THREE.Vector2(
-            threlteCanvas?.width,
-            threlteCanvas?.height,
-          )}
-          {uMouseXN}
-          {uFresnelPower}
+          bind:uBoxNormalizedSize
         />
 
         {#if activeMesh && backgroundMesh}
           <GlassBoxLogic
             bind:backgroundTexture
             bind:renderTarget
+            bind:uBoxNormalizedSize
             {activeMesh}
             {distortion}
             {backgroundMesh}
@@ -314,9 +309,7 @@
             {BACKGROUND_Z}
             {CAMERA_Z}
             {mouseMagnitude}
-            {mouseX}
             bind:normalRenderTarget
-            bind:uMouseXN
             bind:width3D
             bind:height3D
           />

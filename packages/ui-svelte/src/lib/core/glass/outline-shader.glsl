@@ -1,50 +1,76 @@
-uniform sampler2D tNormal;     // Textura que contiene las Normales de la malla (en View Space)
-uniform vec2 uResolution;      // Resolución del viewport
-uniform float uOutlineStrength; // Intensidad del brillo del borde
-uniform vec3 uOutlineColor;    // Color base del borde
-uniform float uFresnelPower;    // Potencia del efecto Fresnel (ej. 2.0 - 5.0)
+uniform sampler2D tNormal;
+uniform vec2 uResolution;
+uniform float uOutlineStrength;
+uniform vec3 uOutlineColor;
+uniform float uFresnelPower;
+uniform float uBorderRadius; 
+
+// NUEVO UNIFORM: Las dimensiones normalizadas (ancho, alto) del cubo 3D proyectado en el viewport (en el espacio [-1, 1]).
+uniform vec2 uBoxNormalizedSize; 
 
 varying vec2 vUv;
 
-void main() {
-    // 1. Obtener la Normal de la superficie del Render Target (Normal Map)
-    // Asumimos que la normal está codificada en el espacio de vista (View Space)
-    // Decodificar el color RGB de la textura a un vector Normal (-1 a 1)
-    vec3 normalColor = texture2D(tNormal, vUv).rgb;
-    
-    // Si la normal es (0, 0, 0), significa que el píxel está vacío (fuera del objeto)
-    // Esto actúa como nuestra máscara de borde inicial.
-    if (dot(normalColor, normalColor) < 0.0001) {
-        discard;
-    }
-    
-    // El MeshNormalMaterial de Three.js renderiza las normales en el espacio de la cámara (View Space),
-    // donde X, Y, Z se mapean a RGB (0, 0, 0) a (1, 1, 1).
-    // Decodificamos de vuelta a (-1, -1, -1) a (1, 1, 1) y normalizamos.
-    vec3 VNormal = normalColor * 2.0 - 1.0;
-    
-    // 2. Calcular el Vector de Vista (View Vector)
-    // En el View Space, el vector de vista (V) para una cámara ortográfica (o cuando se mira a Z=0)
-    // es simplemente la dirección opuesta a la cámara, que es (0, 0, 1) en View Space.
-    // Para una vista centrada, podemos asumir que la dirección de vista es constante
-    // (o usar la posición de vista del vertex shader si la geometría es compleja, pero para un plano es simple).
-    vec3 V = vec3(0.0, 0.0, 1.0); // Vector de vista hacia el observador (en View Space)
-    
-    // 3. Cálculo de Fresnel
-    // Usamos el producto punto entre el vector de vista y la normal.
-    // dot(N, V) es 1.0 cuando miras la normal de frente, y 0.0 cuando miras de soslayo.
-    // Queremos el efecto inverso: máximo en los bordes.
-    
-    float angleFactor = 1.0 - abs(dot(VNormal, V)); // 1.0 en el borde, 0.0 en el centro
-    
-    // Aplicar la potencia (uFresnelPower) para controlar la "dureza" del brillo
-    float fresnelMask = pow(angleFactor, uFresnelPower);
-    
-    // 4. Salida
-    
-    // El factor de brillo es controlado por la máscara Fresnel.
-    vec3 finalOutline = uOutlineColor * fresnelMask * uOutlineStrength;
+// Función SDF para una Caja Redondeada
+float sdRoundedBox(vec2 p, vec2 b, vec4 r) {
+    r.xy = (p.x > 0.0) ? r.xy : r.zw;
+    r.x  = (p.y > 0.0) ? r.x  : r.y;
+    vec2 q = abs(p) - b + r.x;
+    return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - r.x;
+}
 
-    // Usamos el valor Fresnel como Alpha para el AdditiveBlending
-    gl_FragColor = vec4(finalOutline, fresnelMask);
+void main() {
+    // 1. Obtener la normal del render target
+    vec4 normalSample = texture2D(tNormal, vUv);
+    
+    // Si el valor alfa es muy bajo, no hay objeto aquí
+    if (normalSample.a < 0.01) discard;
+    
+   //gl_FragColor = vec4(normalSample.rgb, 1.0); return; 
+    // Decodificación de la normal al espacio de vista (View Space)
+    vec3 viewNormal = normalize(normalSample.rgb * 2.0 - 1.0);
+    vec3 viewDir = vec3(0.0, 0.0, 1.0); // Dirección de la vista en View Space
+    
+    // Cálculo de Fresnel: resalta los bordes que miran lejos de la cámara
+    float NdotV = abs(dot(viewNormal, viewDir));
+    float fresnelFactor = pow(1.0 - NdotV, uFresnelPower);
+
+    // Lógica de Intensidad Estática (se puede usar para un brillo base)
+    float staticIntensity = 1.0;
+    
+    // ----------------------------------------------------
+    // LÓGICA SDF: Máscara de Borde Redondeado y Escala
+    // ----------------------------------------------------
+    
+    // 1. Coordenadas centradas en el viewport [-1, 1]
+    vec2 p = vUv * 2.0 - 1.0;
+    
+    // 2. Corregir la relación de aspecto del *viewport* en las coordenadas
+    float aspect = uResolution.x / uResolution.y;
+    p.x *= aspect; 
+    
+    // 3. Definir las dimensiones de la caja SDF (Medio ancho/alto)
+    // Usamos el tamaño proyectado (uBoxNormalizedSize) y lo dividimos por 2 
+    // para obtener el medio ancho y medio alto, ya que NDC va de -1 a 1.
+    vec2 boxSize = uBoxNormalizedSize * 0.5; 
+    
+    // 4. Corregir la dimensión X de la caja para que coincida con el espacio 'p.x'
+    // Multiplicamos el medio ancho de la caja por el factor de aspecto.
+    boxSize.x *= aspect; 
+    
+    // 5. Calcular la distancia (SDF)
+    // El radio debe ser pequeño para que la esquina sea solo visible en el borde del cubo
+    float dist = sdRoundedBox(p, boxSize, vec4(uBorderRadius)); 
+    
+    // 6. Crear la Máscara: solo dibuja donde la distancia es cercana a 0 (el borde)
+    float thickness = 0.01; // Grosor del contorno
+    float sdfMask = 1.0 - smoothstep(-thickness, thickness, dist); 
+    
+    // ----------------------------------------------------
+
+    // 7. Combinar Fresnel con la Máscara SDF
+    float finalIntensity = fresnelFactor * staticIntensity * sdfMask;
+    
+    vec3 finalColor = uOutlineColor * finalIntensity * uOutlineStrength;
+    
+    gl_FragColor = vec4(finalColor, finalIntensity);
 }

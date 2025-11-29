@@ -1,36 +1,28 @@
 <script lang="ts">
+  import { T } from "@threlte/core";
   import * as THREE from "three";
-  import { T, useThrelte } from "@threlte/core";
-  import { outlineVertexShader, outlineFragmentShader } from "./shaders";
+  import { outlineFragmentShader, outlineVertexShader } from "./shaders";
 
   export let normalRenderTarget: THREE.WebGLRenderTarget | null = null;
-  export let uOutlineStrength: number = 10.0; // Intensidad del brillo
+  export let uOutlineStrength: number = 0.1; // Intensidad del brillo
+  export let uFresnelPower: number = 1.4; // La dureza del brillo (más alto = más concentrado en el borde)
   export let uOutlineColor: THREE.Vector3 = new THREE.Vector3(1.0, 1.0, 1.0); // Blanco
 
-  export let uFresnelPower: number = 5.0; // La dureza del brillo (más alto = más concentrado en el borde)
-  export let uMouseXN: number = 0.5;
-
-  export let uResolution: THREE.Vector2 = new THREE.Vector2(1, 1);
-
+  export let uBorderRadius: number = 0.1;
+  export let uBoxNormalizedSize: THREE.Vector2 = new THREE.Vector2(2, 2);
   let tNormal: THREE.Texture | undefined;
-
-  const { size } = useThrelte();
 
   $: uniforms = {
     tNormal: { value: tNormal },
-    uResolution: { value: uResolution },
     uOutlineStrength: { value: uOutlineStrength },
     uOutlineColor: { value: uOutlineColor },
-    uMouseXN: { value: uMouseXN },
     uFresnelPower: { value: uFresnelPower },
+    uBorderRadius: { value: uBorderRadius },
+    uBoxNormalizedSize: { value: uBoxNormalizedSize },
   };
 
   $: if (normalRenderTarget) {
     tNormal = normalRenderTarget.texture;
-  }
-
-  $: if ($size.width > 0 && $size.height > 0) {
-    uniforms.uResolution.value.set($size.width, $size.height);
   }
 </script>
 
