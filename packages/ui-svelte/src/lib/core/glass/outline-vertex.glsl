@@ -1,3 +1,12 @@
+varying vec2 vUv;
+
+void main() {
+    vUv = uv;
+    
+    // Proyección directa a screen space para el quad fullscreen
+    gl_Position = vec4(position, 1.0);
+}
+/*
 varying vec3 vNormal;
 varying vec4 vCoord;
 varying vec3 vWorldPosition; 
@@ -14,3 +23,4 @@ void main() {
 
     gl_Position = vCoord;
 }
+*/

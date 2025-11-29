@@ -129,7 +129,6 @@
       !staticDepthMesh
     )
       return;
-
     // PASADA 1: Renderizar el fondo
     backgroundMesh.visible = true;
     activeMesh.visible = false;
@@ -143,10 +142,13 @@
     // PASADA 2: Renderizar normales
     staticDepthMesh.material = normalMaterial;
 
-    staticDepthMesh.position.set(0, 0, 0);
-    staticDepthMesh.scale.set(width3D, height3D, 1);
-    staticDepthMesh.rotation.set(0, 0, 0);
+    staticDepthMesh.position.copy(activeMesh.position);
+    staticDepthMesh.rotation.copy(activeMesh.rotation);
+    staticDepthMesh.scale.copy(activeMesh.scale);
     staticDepthMesh.visible = true;
+
+    staticDepthMesh.updateMatrix();
+    staticDepthMesh.updateMatrixWorld(true);
 
     backgroundMesh.visible = false;
     activeMesh.visible = false;
@@ -156,11 +158,10 @@
     renderer.render(staticDepthMesh, camera.current);
 
     // RESTAURAR
-    renderer.setRenderTarget(null);
-    if (glassMesh) scene.add(glassMesh);
     staticDepthMesh.visible = false;
     backgroundMesh.visible = true;
-
+    if (glassMesh) scene.add(glassMesh);
+    renderer.setRenderTarget(null);
     invalidate();
   });
 </script>

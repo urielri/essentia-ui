@@ -293,7 +293,7 @@
         <OutlineEffect
           bind:normalRenderTarget
           uOutlineColor={new THREE.Vector3(1.0, 1.0, 1.0)}
-          bind:uBoxNormalizedSize
+          {uBoxNormalizedSize}
         />
 
         {#if activeMesh && backgroundMesh}
