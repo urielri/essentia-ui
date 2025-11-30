@@ -65,20 +65,20 @@ void main() {
     // Invertimos para que la luz vaya en dirección opuesta
     // float mouseAngle = atan(-uMouse.y, -uMouse.x);
     
-   // float mouseAngle = uMouseMagnitude;
+   float mouseAngle = uMouseMagnitude;
     
-    float mouseAngle = atan(-uMouse.y * 0.01, -uMouse.x * 0.01) * uMouseMagnitude  * -1.5;
+   // float mouseAngle = atan(-uMouse.y, -uMouse.x ) uMouseMagnitude  * -1.5;
     // 9. Ángulo base (sin mouse = luz en top/bottom = PI/2)
     float baseAngle = 3.14159 ;
     
     // 10. Interpolar entre ángulo base y ángulo del mouse según magnitud
     // Cuando uMouseMagnitude = 0, usamos baseAngle (top/bottom)
     // Cuando uMouseMagnitude = 1, usamos mouseAngle (dirección opuesta al mouse)
-    float rotationAngle = mix(baseAngle, mouseAngle, uMouseMagnitude ) ;
+    float rotationAngle = mix(baseAngle, mouseAngle, uMouseMagnitude / 2.5) ;
     
     // 11. Crear matriz de rotación
     float cosA = cos(rotationAngle) * 1.5;
-    float sinA = sin(rotationAngle) * 0.7;
+    float sinA = sin(rotationAngle) * 0.5;
     mat2 rotation = mat2(cosA, -sinA, sinA, cosA);
     
     // 12. Rotar las coordenadas para la máscara direccional
@@ -88,7 +88,7 @@ void main() {
     vec2 qRotated = abs(rotatedP) - boxSize + vec2(shapeRadius);
     
     // 14. Máscara direccional (ahora está rotada)
-    float transitionSoftness = 1.2;
+    float transitionSoftness = 1.0;
     float directionMask = smoothstep(-transitionSoftness, transitionSoftness, qRotated.y - qRotated.x);
     
     // Aplicamos la máscara

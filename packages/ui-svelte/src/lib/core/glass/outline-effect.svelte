@@ -60,13 +60,6 @@
   $: if (normalRenderTarget) {
     tNormal = normalRenderTarget.texture;
   }
-
-  // Debug
-  $: console.log("Mouse uniforms:", {
-    mouseX: uniforms.uMouse.value.x,
-    mouseY: uniforms.uMouse.value.y,
-    magnitude: uniforms.uMouseMagnitude.value,
-  });
 </script>
 
 <T.Mesh z={0}>

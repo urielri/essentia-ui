@@ -14,7 +14,7 @@
           src="/hero.jpg"
           alt="Logo"
           fill
-          style="object-fit:cover; position: absolute;width: 100%;height: 100%;"
+          style="object-fit:cover; position: absolute;width: 100%;height: 100%;filter: brightness(0.8)"
         />
         <div style="position:relative;width:100px;height:100px;">
           <GlassBox debug={false} captureStrategy="3d">
@@ -28,6 +28,17 @@
           style="display:none;position:absolute;top:200px;right:10px;width:300px;height:300px;"
         >
           <GlassBox style="height: 300px;" debug={false} captureStrategy="3d">
+            <div
+              style="width: 100px; height: 100px; background: transparent;"
+            ></div>
+
+            <h1>Hola</h1>
+          </GlassBox>
+        </div>
+        <div
+          style="display:relative;position:absolute;top:200px;right:100px;width:300px;height:100px;"
+        >
+          <GlassBox debug={false} captureStrategy="3d">
             <div
               style="width: 100px; height: 100px; background: transparent;"
             ></div>

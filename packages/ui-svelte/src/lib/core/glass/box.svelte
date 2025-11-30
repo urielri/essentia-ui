@@ -32,7 +32,7 @@
   let cssWidth = 1;
   let cssHeight = 1;
 
-  const MAX_TILT_DEG = 1.0;
+  const MAX_TILT_DEG = 0.3;
   let tiltX = 0;
   let tiltY = 0;
   let normalizedBorderRadius = 0.15; // Valor por defecto
@@ -110,47 +110,6 @@
     }
   }
 
-  $: if (capturedCanvas && backgroundMesh && captureStrategy === "html") {
-    if (backgroundMesh) {
-      backgroundMesh.visible = false;
-      /*
-      if (!backgroundTexture) {
-        createFixedImageTexture(NOISE_TEXTURE_URL)
-          .then((newTexture) => {
-            backgroundTexture = newTexture;
-
-            // Asignar al material del backgroundMesh y ocultar
-            const material = backgroundMesh!
-              .material as THREE.MeshBasicMaterial;
-            if (material) {
-              material.map = newTexture;
-              material.needsUpdate = true;
-            }
-            // Asegúrate de que el backgroundMesh esté oculto o manejado por el GlassMesh
-            backgroundMesh!.visible = false;
-          })
-          .catch(console.error);
-      }
-    */
-    }
-    /*
-    const newTexture = updateThreeJsPlane(
-      capturedCanvas,
-      backgroundMesh,
-      backgroundTexture as THREE.CanvasTexture | undefined,
-      CAMERA_FOV,
-      CAMERA_Z,
-      BACKGROUND_Z,
-    );
-    newTexture.wrapS = THREE.ClampToEdgeWrapping;
-    newTexture.wrapT = THREE.ClampToEdgeWrapping;
-    backgroundTexture = newTexture;
-    // backgroundTexture = createColorTexture("#ADD8E6", 0.01);
-
-    //backgroundTexture = createGradientTexture();
-    */
-  }
-
   $: if (containerRef) {
     const rect = containerRef.getBoundingClientRect();
     const computedStyle = getComputedStyle(containerRef);
@@ -177,12 +136,25 @@
     const mouseDistance = Math.sqrt(mouseX * mouseX + mouseY * mouseY);
 
     // Normalizar la distancia al rango [0, 1]
-    mouseMagnitude = Math.min(mouseDistance / 1.414, 1.0);
+    //mouseMagnitude = Math.min(mouseDistance / 1.414, 1.0);
+    //mouseMagnitude = (mouseX - mouseY) * 0.5; // Rango aprox [-1, +1]
 
+    mouseMagnitude = Math.max(-1, Math.min(1, (mouseX - mouseY) * 0.5));
+
+    const quadrantX = mouseX > 0 ? 1 : 0.5; // Derecha más fuerte
+    const quadrantY = mouseY < 0 ? 1 : -1; // Arriba = +, Abajo = -
+
+    // Intensidad basada en distancia al centro
+    //const intensity = Math.max(Math.abs(mouseX), Math.abs(mouseY));
+
+    //mouseMagnitude = quadrantY * quadrantX * intensity;
+    // Clamp para asegurar rango
+    //  mouseMagnitude = Math.max(-1, Math.min(1, mouseMagnitude));
     zoom = CAMERA_FOV * 1.96;
     tiltX = -mouseY * MAX_TILT_DEG;
     tiltY = mouseX * MAX_TILT_DEG;
   };
+  $: console.log("mouseMagnitude", mouseMagnitude);
 
   const handleMouseOut = () => {
     if (!lookAt) return;
@@ -405,10 +377,8 @@
     padding: 20px;
     overflow: hidden;
     /* Estilos Glassmorphism */
-    /*
     backdrop-filter: blur(var(--blur-glass)) saturate(110%);
     filter: var(--glass-shadow);
-*/
     /* background-color: var(--glass-surface);*/
   }
 </style>
