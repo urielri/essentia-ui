@@ -8,6 +8,10 @@
   export let uFresnelPower: number = 0.5; // La dureza del brillo (más alto = más concentrado en el borde)
   export let uOutlineColor: THREE.Vector3 = new THREE.Vector3(1.0, 1.0, 1.0); // Blanco
 
+  export let mouseX: number = 0;
+  export let mouseY: number = 0;
+  export let mouseMagnitude: number = 0;
+
   export let dpr: number = 1;
   export let cssWidth: number = 1;
   export let cssHeight: number = 1;
@@ -15,40 +19,54 @@
   export let uBorderRadius: number = 0.1;
   export let uBoxNormalizedSize: THREE.Vector2 = new THREE.Vector2(2, 2);
   export let uResolution: THREE.Vector2 = new THREE.Vector2(1, 1);
+
   let tNormal: THREE.Texture | undefined;
+  const { invalidate } = useThrelte();
 
-  const { size } = useThrelte();
-
-  $: uniforms = {
-    tNormal: { value: tNormal },
+  const uMouseVector = new THREE.Vector2(0, 0);
+  const uniforms = {
+    tNormal: { value: null as THREE.Texture | null },
     uOutlineStrength: { value: uOutlineStrength },
     uOutlineColor: { value: uOutlineColor },
     uFresnelPower: { value: uFresnelPower },
     uBorderRadius: { value: uBorderRadius },
     uBoxNormalizedSize: { value: uBoxNormalizedSize },
     uResolution: { value: uResolution },
-    uDpr: { value: dpr }, // Nuevo uniform
+    uDpr: { value: dpr },
+    uMouse: { value: uMouseVector },
+    uMouseMagnitude: { value: mouseMagnitude },
   };
 
+  // Actualizar uniforms y forzar re-render
   $: {
-    console.log("Uniforms:", {
-      uOutlineStrength,
-      uFresnelPower,
-      uBoxNormalizedSize: uBoxNormalizedSize.toArray(),
-      normalRenderTarget: !!normalRenderTarget,
-      uResolution: uResolution.toArray(),
-      tNormal: !!tNormal,
-      uOutlineColor: uOutlineColor.toArray(),
-    });
+    uniforms.tNormal.value = tNormal ?? null;
+    uniforms.uOutlineStrength.value = uOutlineStrength;
+    uniforms.uFresnelPower.value = uFresnelPower;
+    uniforms.uBorderRadius.value = uBorderRadius;
+    uniforms.uDpr.value = dpr;
+
+    // Mouse
+    uniforms.uMouse.value.set(mouseX, -mouseY);
+    uniforms.uMouseMagnitude.value = mouseMagnitude;
+
+    // Resolution
+    uResolution.set(cssWidth * dpr, cssHeight * dpr);
+
+    // FORZAR RE-RENDER
+    invalidate();
   }
 
-  $: {
-    // uResolution debe reflejar el tamaño real del render target
-    uResolution.set(cssWidth * dpr, cssHeight * dpr);
-  }
+  // Actualizar tNormal cuando cambia normalRenderTarget
   $: if (normalRenderTarget) {
     tNormal = normalRenderTarget.texture;
   }
+
+  // Debug
+  $: console.log("Mouse uniforms:", {
+    mouseX: uniforms.uMouse.value.x,
+    mouseY: uniforms.uMouse.value.y,
+    magnitude: uniforms.uMouseMagnitude.value,
+  });
 </script>
 
 <T.Mesh z={0}>

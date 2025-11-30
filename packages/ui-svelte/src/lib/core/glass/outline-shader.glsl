@@ -7,6 +7,9 @@ uniform float uBorderRadius;
 uniform vec2 uBoxNormalizedSize; 
 uniform float uDpr;
 
+uniform vec2 uMouse; 
+uniform float uMouseMagnitude; 
+
 varying vec2 vUv;
 
 float sdRoundedBox(vec2 p, vec2 b, vec4 r) {
@@ -33,42 +36,66 @@ void main() {
     float viewportAspect = uResolution.x / uResolution.y;
     p.x *= viewportAspect;
 
-    // Tamaño Inset
+    // 3. Tamaño y forma
     vec2 boxSize = vec2(uBoxNormalizedSize.x, 1.0);
-    
-    // Radio para la FORMA (Geometría)
-    // Este lo dejamos igual para que coincida con el border-radius de tu CSS
     float shapeRadius = uBorderRadius * min(boxSize.x, boxSize.y);
     
-    // Distancia SDF
+    // 4. Distancia SDF
     float dist = sdRoundedBox(p, boxSize, vec4(shapeRadius));
     
-    
-    // --- CAMBIO CLAVE: ANCHURA CONSTANTE ---
-    
-    // Definimos qué tan grueso queremos el borde del Fresnel.
-    // 0.15 significa "15% de la altura del viewport", constante para todos.
-    // Puedes convertir esto en un uniform uFresnelWidth si quieres controlarlo desde JS.
-       float targetPixelWidth = 2.0; 
-    
-    // 2. Conversión de Píxeles a Espacio SDF
-    // El espacio SDF vertical mide 2.0 unidades (-1 a 1).
-    // uResolution.y es la altura en píxeles físicos.
-    // Multiplicamos por uDpr para asegurar que 40px se vean igual en pantallas Retina.
+    // 5. Anchura del Fresnel
+    float targetPixelWidth = 2.0; 
     float pixelToSdfScale = 3.0 / uResolution.y;
-    
     float fresnelWidth = (targetPixelWidth * uDpr) * pixelToSdfScale;
     
     float curveFactor = smoothstep(-fresnelWidth, 0.0, dist);
-    // --- FRESNEL VIRTUAL ---
-    // Mismo cálculo que antes
-    float virtualNdotV = physicalNdotV * (1.0 - pow(curveFactor, 2.0)); // Subí a 3.0 para hacerlo más "sharp" en el borde
     
+    // 6. Fresnel Virtual
+    float virtualNdotV = physicalNdotV * (1.0 - pow(curveFactor, 2.0));
     float fresnelFactor = pow(1.0 - virtualNdotV, uFresnelPower);
 
-    // --- MÁSCARA ---
+    // 7. Máscara de clip
     float alphaMask = 1.0 - smoothstep(0.0, 0.01, dist);
     
+
+    // --- MÁSCARA DIRECCIONAL CON ROTACIÓN PURA ---
+    
+    // 8. Calcular el ángulo de rotación basado en la posición del mouse
+    // atan2 da el ángulo del mouse respecto al centro
+    // Invertimos para que la luz vaya en dirección opuesta
+    // float mouseAngle = atan(-uMouse.y, -uMouse.x);
+    
+   // float mouseAngle = uMouseMagnitude;
+    
+    float mouseAngle = atan(-uMouse.y * 0.01, -uMouse.x * 0.01) * uMouseMagnitude  * -1.5;
+    // 9. Ángulo base (sin mouse = luz en top/bottom = PI/2)
+    float baseAngle = 3.14159 ;
+    
+    // 10. Interpolar entre ángulo base y ángulo del mouse según magnitud
+    // Cuando uMouseMagnitude = 0, usamos baseAngle (top/bottom)
+    // Cuando uMouseMagnitude = 1, usamos mouseAngle (dirección opuesta al mouse)
+    float rotationAngle = mix(baseAngle, mouseAngle, uMouseMagnitude ) ;
+    
+    // 11. Crear matriz de rotación
+    float cosA = cos(rotationAngle) * 1.5;
+    float sinA = sin(rotationAngle) * 0.7;
+    mat2 rotation = mat2(cosA, -sinA, sinA, cosA);
+    
+    // 12. Rotar las coordenadas para la máscara direccional
+    vec2 rotatedP = rotation * p ;
+    
+    // 13. Calcular q con las coordenadas rotadas
+    vec2 qRotated = abs(rotatedP) - boxSize + vec2(shapeRadius);
+    
+    // 14. Máscara direccional (ahora está rotada)
+    float transitionSoftness = 1.2;
+    float directionMask = smoothstep(-transitionSoftness, transitionSoftness, qRotated.y - qRotated.x);
+    
+    // Aplicamos la máscara
+    fresnelFactor *= directionMask;
+    
+    
+    // 15. Resultado final
     float finalIntensity = fresnelFactor * alphaMask;
 
     vec3 finalColor = uOutlineColor * finalIntensity * uOutlineStrength;

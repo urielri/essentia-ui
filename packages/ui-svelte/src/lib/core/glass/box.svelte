@@ -306,6 +306,9 @@
           {dpr}
           {cssWidth}
           {cssHeight}
+          {mouseX}
+          {mouseY}
+          {mouseMagnitude}
         />
 
         {#if activeMesh && backgroundMesh}
@@ -356,7 +359,7 @@
     position: relative;
     overflow: hidden;
     user-select: none;
-    /*border: 1px solid var(--border-container-glass-box); */
+    border: 1px solid var(--border-container-glass-box);
     transform: perspective(1000px) rotateX(var(--tiltX, 0deg))
       rotateY(var(--tiltY, 0deg));
     transition: transform 0.2s ease-out;
@@ -402,8 +405,10 @@
     padding: 20px;
     overflow: hidden;
     /* Estilos Glassmorphism */
+    /*
     backdrop-filter: blur(var(--blur-glass)) saturate(110%);
     filter: var(--glass-shadow);
+*/
     /* background-color: var(--glass-surface);*/
   }
 </style>
