@@ -21,6 +21,10 @@
   export let width3D: number = 1;
   export let height3D: number = 1;
 
+  export let dpr: number = 1;
+  export let cssWidth: number = 1;
+  export let cssHeight: number = 1;
+
   export let glassMesh: Mesh | undefined = undefined;
 
   export let uBoxNormalizedSize: THREE.Vector2 = new THREE.Vector2(2.0, 2.0);
@@ -30,6 +34,11 @@
   let depthMaterial = new THREE.MeshDepthMaterial();
   let normalMaterial = new THREE.MeshNormalMaterial();
   let staticDepthMesh: THREE.Mesh;
+  // 1. FACTOR DE COBERTURA: Hace la malla 5% más grande para evitar huecos negros
+  const COVERAGE_FACTOR = 1.05;
+
+  // 2. FACTOR DE BORDE: Define dónde se dibuja la línea blanca (95% del viewport)
+  const BORDER_INSET = 0.95;
 
   const { size, invalidate, camera, renderer, scene } = useThrelte();
 
@@ -38,7 +47,8 @@
   );
 
   $: {
-    const aspect = $size.width / $size.height;
+    //const aspect = $size.width / $size.height;
+    const aspect = (cssWidth / cssHeight) * COVERAGE_FACTOR;
     const visibleHeight =
       2 *
       distanceToBackground *
@@ -52,54 +62,44 @@
       activeMesh.scale.set(width3D, height3D, 1);
     }
 
-    uBoxNormalizedSize.set(2.0, 2.0);
+    //    uBoxNormalizedSize.set(width3D, height3D);
+    //uBoxNormalizedSize.set(aspect, 1.0);
+
+    uBoxNormalizedSize.set(aspect * BORDER_INSET, BORDER_INSET);
+    //    uBoxNormalizedSize.set(1.0, 1.0);
   }
 
-  $: if ($size.width > 0 && $size.height > 0) {
+  $: if (cssWidth > 0 && cssHeight > 0) {
     if (captureStrategy === "3d") {
+      // Usar dimensiones en píxeles físicos para los render targets
+      const rtWidth = Math.floor(cssWidth * dpr);
+      const rtHeight = Math.floor(cssHeight * dpr);
+
       if (!renderTarget) {
-        renderTarget = new THREE.WebGLRenderTarget($size.width, $size.height, {
+        renderTarget = new THREE.WebGLRenderTarget(rtWidth, rtHeight, {
           minFilter: THREE.LinearFilter,
           magFilter: THREE.LinearFilter,
           format: THREE.RGBAFormat,
         });
       } else {
-        renderTarget.setSize($size.width, $size.height);
+        renderTarget.setSize(rtWidth, rtHeight);
       }
 
-      backgroundTexture = renderTarget.texture;
-
-      const glassMaterial = activeMesh.material as THREE.ShaderMaterial;
-      if (
-        glassMaterial &&
-        glassMaterial.uniforms &&
-        glassMaterial.uniforms.tBackground
-      ) {
-        glassMaterial.uniforms.tBackground.value = backgroundTexture;
-      }
-
-      backgroundMesh.position.set(0, 0, BACKGROUND_Z);
+      // ... resto del código ...
 
       if (!normalRenderTarget) {
-        normalRenderTarget = new THREE.WebGLRenderTarget(
-          $size.width,
-          $size.height,
-          {
-            minFilter: THREE.LinearFilter,
-            magFilter: THREE.LinearFilter,
-            format: THREE.RGBAFormat,
-          },
-        );
+        normalRenderTarget = new THREE.WebGLRenderTarget(rtWidth, rtHeight, {
+          minFilter: THREE.LinearFilter,
+          magFilter: THREE.LinearFilter,
+          format: THREE.RGBAFormat,
+        });
       } else {
-        normalRenderTarget.setSize($size.width, $size.height);
+        normalRenderTarget.setSize(rtWidth, rtHeight);
       }
 
       invalidate();
-    } else {
-      renderTarget = null;
     }
   }
-
   onMount(() => {
     staticDepthMesh = activeMesh.clone();
     staticDepthMesh.material = depthMaterial;

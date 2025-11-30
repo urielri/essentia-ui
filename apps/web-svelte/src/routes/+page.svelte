@@ -56,7 +56,41 @@
       <button>Button</button>
       <button>Button</button>
       <button>Button</button>
-      <button>Button</button>
+      <GlassBox>
+        <button>Button</button>
+      </GlassBox>
+      <GlassBox>
+        <div
+          style="width:100px;height:100px;background:red;border-radius:50%;"
+        ></div>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec
+          elementum, nisi eu elementum tincidunt, ipsum nisl aliquet nisi, sit
+          amet ullamcorper nisi nisl eu nisl. Donec elementum, nisi eu elementum
+          tincidunt, ipsum nisl aliquet nisi, sit amet ullamcorper nisi nisl eu
+          nisl. Donec elementum, nisi eu elementum tincidunt, ipsum nisl aliquet
+          nisi, sit amet ullamcorper nisi nisl eu nisl. Donec elementum, nisi eu
+          elementum tincidunt, ipsum nisl aliquet nisi, sit amet ullamcorper
+          nisi nisl eu nisl. Donec elementum, nisi eu elementum tincidunt, ipsum
+          nisl aliquet nisi, sit amet ullamcorper nisi nisl eu nisl. Donec
+          elementum, nisi eu elementum tincidunt, ipsum nisl aliquet nisi, sit
+          amet ullamcorper nisi nisl eu nisl. Donec elementum, nisi eu elementum
+          tincidunt, ipsum nisl aliquet nisi, sit amet ullamcorper nisi nisl eu
+          nisl. Donec elementum, nisi eu elementum tincidunt, ipsum nisl aliquet
+          nisi, sit amet ullamcorper nisi nisl eu nisl.
+        </p>
+      </GlassBox>
+      <div style="max-width: 60%">
+        <GlassBox>
+          <div
+            style="width:100px;height:100px;background:red;border-radius:50%;"
+          ></div>
+          <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec
+            elementum, nisi eu elementum tincidunt, ipsum nisl aliquet nisi, sit
+          </p>
+        </GlassBox>
+      </div>
     </div>
     <div class="content-grid" style="background:antiquewhite;">
       <button>Button</button>

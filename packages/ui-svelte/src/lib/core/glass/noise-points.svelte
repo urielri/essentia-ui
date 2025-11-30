@@ -6,67 +6,68 @@
   // PROPS
   export let noiseVertexShader: string;
   export let noiseFragmentShader: string;
-  export let width3D: number;
-  export let height3D: number;
+  export let width3D: number = 1;
+  export let height3D: number = 1;
   export let mouseX: number;
   export let mouseY: number;
   export let mouseMagnitude: number;
 
-  const NUM_PARTICLES = 50000;
+  // CONFIGURACIÓN
+  const MAX_PARTICLES = 70000;
+
+  const PARTICLES_PER_SCREEN_PIXEL = 2.08; // 1 partícula cada 50 píxeles²
+  const MIN_PARTICLES = 10000;
+
+  export let cssWidth: number = 1; // Agregar estas props
+  export let cssHeight: number = 1;
+
+  function calculateParticleCount(): number {
+    const screenArea = cssWidth * cssHeight;
+    const count = Math.floor(screenArea * PARTICLES_PER_SCREEN_PIXEL);
+    return Math.max(MIN_PARTICLES, Math.min(MAX_PARTICLES, count));
+  }
   const { scene } = useThrelte();
 
   let particles: THREE.Points | undefined;
   let material: THREE.ShaderMaterial | undefined;
 
-  // --- Uniforms ---
   let uniforms = {
-    u_time: { value: 0.0 },
-    //    uBaseColor: { value: new THREE.Color(0.1, 0.1, 0.1) },
-    perlinFactor: { value: 0.2 }, // Densidad inicial del ruido
-    randomFactor: { value: 1.0 }, // Desplazamiento random inicial
-    width3D: { value: width3D },
-    height3D: { value: height3D },
+    uTime: { value: 0.0 },
+    width3D: { value: 1.0 },
+    height3D: { value: 1.0 },
     mouse: { value: new THREE.Vector2(0, 0) },
     mouseMagnitude: { value: mouseMagnitude },
+    // Color BLANCO para la máscara (R=1, G=1, B=1)
+    uBaseColor: { value: new THREE.Vector3(1.0, 1.0, 1.0) },
   };
 
-  // --- Sincronización de Props ---
+  // --- REACTIVIDAD ---
   $: if (material && material.uniforms) {
+    // Actualizar uniforms
     material.uniforms.width3D!.value = width3D;
     material.uniforms.height3D!.value = height3D;
-    material.uniforms.mouse!.value.set(mouseX, -mouseY);
-    material.uniforms.mouseMagnitude!.value = mouseMagnitude;
+    //    material.uniforms.mouse!.value.set(mouseX, -mouseY); // Invertir Y si es necesario
+    //   material.uniforms.mouseMagnitude!.value = mouseMagnitude;
+    // Actualizar cantidad de partículas (Draw Range)
+    if (particles && particles.geometry && width3D > 0 && height3D > 0) {
+      // Aseguramos un mínimo de partículas para que no desaparezca en cajas pequeñas
+      //const count = Math.max(100, Math.min(MAX_PARTICLES, targetCount));
+      const count = calculateParticleCount();
+      particles.geometry.setDrawRange(0, count);
+    }
   }
 
-  // --- Inicialización 3D ---
   onMount(() => {
-    // 1. Geometría: Crea la nube de puntos
     const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(MAX_PARTICLES * 3);
+    const references = new Float32Array(MAX_PARTICLES * 2); // Semilla random estática
 
-    const positions = new Float32Array(NUM_PARTICLES * 3);
-    const references = new Float32Array(NUM_PARTICLES * 2);
-    geometry.setAttribute(
-      "reference",
-      new THREE.BufferAttribute(references, 2),
-    );
+    for (let i = 0; i < MAX_PARTICLES; i++) {
+      // IMPORTANTE: Normalizado de -0.5 a 0.5
+      positions[i * 3 + 0] = Math.random() - 0.5;
+      positions[i * 3 + 1] = Math.random() - 0.5;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 0.5; // Z muy sutil
 
-    // PREVENCIÓN: Desactiva el cálculo de la esfera delimitadora si no la necesitas
-    geometry.boundingSphere = new THREE.Sphere(
-      new THREE.Vector3(0, 0, 0),
-      Infinity,
-    );
-    geometry.boundingSphere.radius = Infinity; // Esto es solo un hack para detener el cálculo
-    for (let i = 0; i < NUM_PARTICLES; i++) {
-      // Posiciones aleatorias centradas en la escena
-      const x = Math.random() * width3D - width3D / 2;
-      const y = Math.random() * height3D - height3D / 2;
-      const z = Math.random() * 5 - 2.5; // Pequeña profundidad
-
-      positions[i * 3 + 0] = x;
-      positions[i * 3 + 1] = y;
-      positions[i * 3 + 2] = z;
-
-      // Attribute 'reference'
       references[i * 2 + 0] = Math.random();
       references[i * 2 + 1] = Math.random();
     }
@@ -76,20 +77,24 @@
       "reference",
       new THREE.BufferAttribute(references, 2),
     );
+    geometry.boundingSphere = new THREE.Sphere(
+      new THREE.Vector3(0, 0, 0),
+      Infinity,
+    );
 
-    // 2. Material: Carga los Shaders
     material = new THREE.ShaderMaterial({
       uniforms: uniforms,
       vertexShader: noiseVertexShader,
       fragmentShader: noiseFragmentShader,
       transparent: true,
       depthTest: false,
-      blending: THREE.AdditiveBlending, // blending aditivo se ve genial en nubes de partículas
+      depthWrite: false, // Importante para máscaras superpuestas
+      blending: THREE.NormalBlending,
     });
 
-    // 3. Puntos: Crea el objeto THREE.Points
     particles = new THREE.Points(geometry, material);
-    particles.position.z = -2; // Coloca la nube ligeramente detrás de otros objetos
+    // Z en 0 o ligeramente atrás según tu setup
+    particles.position.set(0, 0, 0);
 
     scene.add(particles);
 
@@ -99,11 +104,9 @@
       material!.dispose();
     };
   });
-
-  // --- Bucle de Actualización ---
   useTask((delta: number) => {
     if (material) {
-      material.uniforms.u_time!.value += delta;
+      material.uniforms.uTime!.value += delta;
     }
   });
 </script>

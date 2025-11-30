@@ -4,7 +4,7 @@
   export let activeMesh: Mesh | undefined = undefined;
   export let mouseX: number = 0;
   export let mouseY: number = 0;
-  export let SENSITIVITY: number = 0.2;
+  export let SENSITIVITY: number = 0.1;
   export let mouseMagnitude: number = 0;
   export let width3D: number = 1;
   export let height3D: number = 1;
@@ -22,11 +22,14 @@
       const MAX_COMPENSATION_FACTOR = 0.05;
       const currentCompensation =
         1.0 + mouseMagnitude * MAX_COMPENSATION_FACTOR;
+      /*
       activeMesh.scale.set(
         width3D * currentCompensation,
         height3D * currentCompensation,
         1.0,
       );
+      */
+      activeMesh.scale.set(width3D, height3D, 1.0);
     }
   });
 </script>

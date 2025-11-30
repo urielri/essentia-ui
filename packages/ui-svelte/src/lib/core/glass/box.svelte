@@ -25,7 +25,12 @@
   export let canRenderOnScroll: boolean = false;
   export let canRenderOnResize: boolean = false;
 
-  export let SENSITIVITY = 0.1;
+  export let SENSITIVITY = 0.0;
+
+  // Ajuste para el zoom del navegador
+  let dpr = 1;
+  let cssWidth = 1;
+  let cssHeight = 1;
 
   const MAX_TILT_DEG = 1.0;
   let tiltX = 0;
@@ -55,7 +60,7 @@
   let renderTarget: THREE.WebGLRenderTarget | null = null;
   // CONSTANTES 3D
   const CAMERA_FOV = 75;
-  const BACKGROUND_Z = -5; // Posición Z del plano de fondo. Cambiar a -5 si quieres más profundidad.
+  const BACKGROUND_Z = 0; // Posición Z del plano de fondo. Cambiar a -5 si quieres más profundidad.
   const CAMERA_Z = 0; // Posición Z de la cámara
 
   let noiseScale = new THREE.Vector3(1, 1, 1);
@@ -74,34 +79,20 @@
     });
   };
 
-  async function handleCapture() {
-    const result = await captureBackground(
-      backgroundContentRef,
-      threlteCanvas,
-      isSuspended,
-      contentRef,
-    );
-
-    if (result) {
-      capturedCanvas = result.canvas;
-    }
-  }
-
-  let isCapturing = false;
-  const CAPTURE_THROTTLE_MS = 200;
-
-  // SOLO EN ESTRATEGIA HTML
   const handleEvents = async () => {
-    if (captureStrategy !== "html") return; // Agregar condición de estrategia
-
-    isCapturing = true;
-
-    await handleCapture();
-
-    setTimeout(() => {
-      isCapturing = false;
-    }, CAPTURE_THROTTLE_MS);
+    console.log("CAPTURED");
   };
+
+  function updateDimensions() {
+    if (!containerRef) return;
+
+    const rect = containerRef.getBoundingClientRect();
+    dpr = window.devicePixelRatio || 1;
+    cssWidth = rect.width;
+    cssHeight = rect.height;
+
+    console.log("Updated dimensions:", { dpr, cssWidth, cssHeight });
+  }
 
   $: if (canvasLayerRef && !threlteCanvas) {
     const threlteDiv = canvasLayerRef.firstChild;
@@ -204,7 +195,17 @@
       //  zoom = CAMERA_FOV;
     }
   };
+
   onMount(() => {
+    updateDimensions();
+    // Escuchar cambios de zoom (se detecta como resize)
+    window.addEventListener("resize", updateDimensions);
+
+    // Detectar cambios de devicePixelRatio (zoom)
+    const mediaQuery = window.matchMedia(
+      `(resolution: ${window.devicePixelRatio}dppx)`,
+    );
+    mediaQuery.addEventListener("change", updateDimensions);
     return () => {
       if (canRenderOnScroll) {
         window.removeEventListener("scroll", handleEvents);
@@ -213,8 +214,14 @@
         window.removeEventListener("resize", handleEvents);
       }
       if (backgroundTexture) backgroundTexture.dispose();
+      window.removeEventListener("resize", updateDimensions);
+      mediaQuery.removeEventListener("change", updateDimensions);
     };
   });
+
+  $: if (containerRef) {
+    updateDimensions();
+  }
 
   const CONFIG_THREE_COMPONENTS = {
     Mesh: {
@@ -273,18 +280,20 @@
           <NoisePoints
             {noiseVertexShader}
             {noiseFragmentShader}
-            bind:width3D
-            bind:height3D
+            {width3D}
+            {height3D}
             {mouseX}
             {mouseY}
             {mouseMagnitude}
+            {cssWidth}
+            {cssHeight}
           />
         </T.Mesh>
 
         <AnimatedBox
           bind:activeMesh
-          bind:width3D
-          bind:height3D
+          {width3D}
+          {height3D}
           {mouseX}
           {mouseY}
           {mouseMagnitude}
@@ -294,6 +303,9 @@
           bind:normalRenderTarget
           uOutlineColor={new THREE.Vector3(1.0, 1.0, 1.0)}
           {uBoxNormalizedSize}
+          {dpr}
+          {cssWidth}
+          {cssHeight}
         />
 
         {#if activeMesh && backgroundMesh}
@@ -312,6 +324,9 @@
             bind:normalRenderTarget
             bind:width3D
             bind:height3D
+            {dpr}
+            {cssWidth}
+            {cssHeight}
           />
         {/if}
         {#if debug}
@@ -341,7 +356,7 @@
     position: relative;
     overflow: hidden;
     user-select: none;
-    border: 1px solid var(--border-container-glass-box);
+    /*border: 1px solid var(--border-container-glass-box); */
     transform: perspective(1000px) rotateX(var(--tiltX, 0deg))
       rotateY(var(--tiltY, 0deg));
     transition: transform 0.2s ease-out;
@@ -387,10 +402,8 @@
     padding: 20px;
     overflow: hidden;
     /* Estilos Glassmorphism */
-    /*
     backdrop-filter: blur(var(--blur-glass)) saturate(110%);
     filter: var(--glass-shadow);
-*/
     /* background-color: var(--glass-surface);*/
   }
 </style>

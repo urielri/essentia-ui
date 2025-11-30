@@ -1,27 +1,18 @@
-varying float perlin; // Recibido del Vertex Shader
-uniform vec3 uBaseColor; 
-uniform float uTime; // Necesario para variar el color si lo deseas
+varying float vAlpha;
+uniform vec3 uBaseColor;
 
 void main() {
-    // 1. Suavizado Circular del Punto
-    // Esto hace que el punto se vea como un círculo suave en lugar de un cuadrado.
-    float r = distance(gl_PointCoord, vec2(0.5));
-    float circleAlpha = 1.0 - smoothstep(0.4, 0.5, r);
+    vec2 uv = gl_PointCoord - 0.5;
+    float r = length(uv);
     
-    // Descartar píxeles fuera del círculo
-    if (circleAlpha < 0.01) discard; 
-
-    // 2. Color y Opacidad basadas en Perlin
+    // Círculo un poco más definido para que parezca grano
+    float shape = 1.0 - smoothstep(0.35, 0.5, r);
     
-    // Valor de Perlin normalizado (0 a 1)
-    float normalizedPerlin = perlin / 1.5; 
+    if (shape < 0.01) discard;
     
-    // Control de la opacidad: los puntos con ruido bajo (oscuro) son más transparentes
-    float opacity = normalizedPerlin * 0.1; 
+    // Opacidad Ajustada para NormalBlending
+    // Subimos de 0.1 a 0.4 porque ya no se suman exponencialmente
+    float opacity = shape * vAlpha * 0.1; 
     
-    // Color: Mezcla el color base (uBaseColor) con un color más claro (ej. blanco) basado en el ruido
-    vec3 color = mix(uBaseColor, vec3(0.8, 0.8, 0.8), normalizedPerlin);
-
-    // 3. Salida Final
-    gl_FragColor = vec4(color, circleAlpha * opacity);
+    gl_FragColor = vec4(uBaseColor, opacity);
 }

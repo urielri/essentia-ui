@@ -4,9 +4,13 @@
   import { outlineFragmentShader, outlineVertexShader } from "./shaders";
 
   export let normalRenderTarget: THREE.WebGLRenderTarget | null = null;
-  export let uOutlineStrength: number = 1.0; // Intensidad del brillo
-  export let uFresnelPower: number = 0.2; // La dureza del brillo (más alto = más concentrado en el borde)
+  export let uOutlineStrength: number = 3.0; // Intensidad del brillo
+  export let uFresnelPower: number = 0.5; // La dureza del brillo (más alto = más concentrado en el borde)
   export let uOutlineColor: THREE.Vector3 = new THREE.Vector3(1.0, 1.0, 1.0); // Blanco
+
+  export let dpr: number = 1;
+  export let cssWidth: number = 1;
+  export let cssHeight: number = 1;
 
   export let uBorderRadius: number = 0.1;
   export let uBoxNormalizedSize: THREE.Vector2 = new THREE.Vector2(2, 2);
@@ -23,6 +27,7 @@
     uBorderRadius: { value: uBorderRadius },
     uBoxNormalizedSize: { value: uBoxNormalizedSize },
     uResolution: { value: uResolution },
+    uDpr: { value: dpr }, // Nuevo uniform
   };
 
   $: {
@@ -37,15 +42,16 @@
     });
   }
 
-  $: if ($size.width > 0 && $size.height > 0) {
-    uResolution.set($size.width, $size.height);
+  $: {
+    // uResolution debe reflejar el tamaño real del render target
+    uResolution.set(cssWidth * dpr, cssHeight * dpr);
   }
   $: if (normalRenderTarget) {
     tNormal = normalRenderTarget.texture;
   }
 </script>
 
-<T.Mesh z={0} position={[0, 0, 0]}>
+<T.Mesh z={0}>
   <T.PlaneGeometry args={[2, 2]} />
 
   <T.ShaderMaterial

@@ -5,6 +5,7 @@ uniform vec3 uOutlineColor;
 uniform float uFresnelPower;
 uniform float uBorderRadius; 
 uniform vec2 uBoxNormalizedSize; 
+uniform float uDpr;
 
 varying vec2 vUv;
 
@@ -17,71 +18,60 @@ float sdRoundedBox(vec2 p, vec2 b, vec4 r) {
 
 void main() {
     vec4 normalSample = texture2D(tNormal, vUv);
-    
- // DEBUG: Visualiza el canal alfa de la textura de normales
-    // Descomenta esta línea para ver si hay contenido:
-    // gl_FragColor = vec4(vec3(normalSample.a), 1.0); return;
 
     if (normalSample.a < 0.01) {
         discard;
     }
     
-    // Decodificar normales
+    // 1. Normal Física
     vec3 viewNormal = normalize(normalSample.rgb * 2.0 - 1.0);
     vec3 viewDir = vec3(0.0, 0.0, 1.0);
-    
-   // DEBUG: Visualiza las normales decodificadas
-    // Descomenta esta línea para ver las normales:
-    // gl_FragColor = vec4(viewNormal * 0.5 + 0.5, 1.0); return;
-    
+    float physicalNdotV = abs(dot(viewNormal, viewDir));
 
-    // Calcular Fresnel
-    float NdotV = abs(dot(viewNormal, viewDir));
-    float fresnelFactor = pow(1.0 - NdotV, uFresnelPower);
-
- // DEBUG: Visualiza el fresnel
-    // Descomenta esta línea para ver el fresnel:
-    // gl_FragColor = vec4(vec3(fresnelFactor), 1.0); return;
-    
-    // SDF para definir la región del borde
-    vec2 p = vUv * 2.0 - 1.0;
-
-    // DEBUG: Visualiza las coordenadas
-    // Descomenta para ver si las coordenadas están bien:
-    // gl_FragColor = vec4(vUv, 0.0, 1.0); return;
-    
+    // 2. Coordenadas SDF
+    vec2 p = vUv * 2.0 - 1.0; 
     float viewportAspect = uResolution.x / uResolution.y;
-    float boxAspect = uBoxNormalizedSize.x / uBoxNormalizedSize.y;
-    
-    vec2 scaledP = p;
-    scaledP.x *= viewportAspect / boxAspect;
-    
-    vec2 boxSize = vec2(1.0, 1.0);
-    float adjustedRadius = uBorderRadius * min(uBoxNormalizedSize.x, uBoxNormalizedSize.y);
-    
-    float dist = sdRoundedBox(scaledP, boxSize, vec4(adjustedRadius));
-    
- // DEBUG: Visualiza la distancia SDF
-    // Descomenta para ver el campo de distancia:
-    // gl_FragColor = vec4(vec3(dist * 0.5 + 0.5), 1.0); return;
-    
+    p.x *= viewportAspect;
 
-    // Máscara: solo el borde (grosor ajustable)
-    float innerEdge = -0.05;  // Ajusta este valor para hacer el borde más grueso
-    float outerEdge = 0.05;
-    float sdfMask = 1.0 - smoothstep(innerEdge, outerEdge, dist);
+    // Tamaño Inset
+    vec2 boxSize = vec2(uBoxNormalizedSize.x, 1.0);
     
-    // Combinar Fresnel con SDF
-    // El SDF define DÓNDE aparece el borde
-    // El Fresnel define la INTENSIDAD basada en el ángulo de visión
-    float finalIntensity = fresnelFactor * sdfMask;
+    // Radio para la FORMA (Geometría)
+    // Este lo dejamos igual para que coincida con el border-radius de tu CSS
+    float shapeRadius = uBorderRadius * min(boxSize.x, boxSize.y);
     
-    // DEBUG: Visualiza la intensidad final antes de aplicar color
-    // Descomenta para ver la intensidad combinada:
-    // gl_FragColor = vec4(vec3(finalIntensity), 1.0); return;
+    // Distancia SDF
+    float dist = sdRoundedBox(p, boxSize, vec4(shapeRadius));
     
+    
+    // --- CAMBIO CLAVE: ANCHURA CONSTANTE ---
+    
+    // Definimos qué tan grueso queremos el borde del Fresnel.
+    // 0.15 significa "15% de la altura del viewport", constante para todos.
+    // Puedes convertir esto en un uniform uFresnelWidth si quieres controlarlo desde JS.
+       float targetPixelWidth = 2.0; 
+    
+    // 2. Conversión de Píxeles a Espacio SDF
+    // El espacio SDF vertical mide 2.0 unidades (-1 a 1).
+    // uResolution.y es la altura en píxeles físicos.
+    // Multiplicamos por uDpr para asegurar que 40px se vean igual en pantallas Retina.
+    float pixelToSdfScale = 3.0 / uResolution.y;
+    
+    float fresnelWidth = (targetPixelWidth * uDpr) * pixelToSdfScale;
+    
+    float curveFactor = smoothstep(-fresnelWidth, 0.0, dist);
+    // --- FRESNEL VIRTUAL ---
+    // Mismo cálculo que antes
+    float virtualNdotV = physicalNdotV * (1.0 - pow(curveFactor, 2.0)); // Subí a 3.0 para hacerlo más "sharp" en el borde
+    
+    float fresnelFactor = pow(1.0 - virtualNdotV, uFresnelPower);
+
+    // --- MÁSCARA ---
+    float alphaMask = 1.0 - smoothstep(0.0, 0.01, dist);
+    
+    float finalIntensity = fresnelFactor * alphaMask;
+
     vec3 finalColor = uOutlineColor * finalIntensity * uOutlineStrength;
     
     gl_FragColor = vec4(finalColor, finalIntensity);
 }
-   //gl_FragColor = vec4(normalSample.rgb, 1.0); return; 
