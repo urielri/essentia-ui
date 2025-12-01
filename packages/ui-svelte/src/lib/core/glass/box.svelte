@@ -4,12 +4,13 @@
   import type { CanvasTexture, Mesh, WebGLRenderer } from "three";
   import * as THREE from "three";
   import AnimatedBox from "./animated-box.svelte";
+  import BlurEffect from "./blur-effect.svelte";
   import GlassBoxLogic from "./box-logic.svelte";
-  import { captureBackground } from "./html2canvas-logic";
-  import TextureDebugPlane from "./texture-debug-plane.svelte";
-  import { noiseVertexShader, noiseFragmentShader } from "./shaders";
   import NoisePoints from "./noise-points.svelte";
   import OutlineEffect from "./outline-effect.svelte";
+  import { noiseFragmentShader, noiseVertexShader } from "./shaders";
+  import TextureDebugPlane from "./texture-debug-plane.svelte";
+  import OutlineNormalGenerator from "./outline-normal-generator.svelte";
   export let isSuspended: boolean = false;
   export let captureStrategy: "html" | "3d" = "3d";
   export let distortion: number = 9.0;
@@ -32,6 +33,9 @@
   let cssWidth = 1;
   let cssHeight = 1;
 
+  let blurEnabled = true;
+  let blurIntensity = 3.2;
+
   const MAX_TILT_DEG = 0.3;
   let tiltX = 0;
   let tiltY = 0;
@@ -40,9 +44,9 @@
   let height3D: number = 1;
 
   let activeMesh: Mesh | undefined;
+
   let uFresnelPower: number = 0.5; // La dureza del brillo (más alto = más concentrado en el borde)
   let normalRenderTarget: THREE.WebGLRenderTarget | null = null;
-
   let backgroundContentRef: HTMLDivElement;
 
   let backgroundTexture: CanvasTexture | THREE.Texture | undefined;
@@ -53,9 +57,6 @@
   let contentRef: HTMLDivElement | undefined;
   let containerRef: HTMLDivElement | undefined;
   // ESTADO DE DEPURACIÓN Y CAPTURA
-  let capturedImageURL: string | null = null;
-
-  let capturedCanvas: HTMLCanvasElement | undefined = undefined;
 
   let renderTarget: THREE.WebGLRenderTarget | null = null;
   // CONSTANTES 3D
@@ -154,7 +155,6 @@
     tiltX = -mouseY * MAX_TILT_DEG;
     tiltY = mouseX * MAX_TILT_DEG;
   };
-  $: console.log("mouseMagnitude", mouseMagnitude);
 
   const handleMouseOut = () => {
     if (!lookAt) return;
@@ -228,7 +228,7 @@
   <div class="background-content" bind:this={backgroundContentRef}></div>
 
   {#if !isSuspended}
-    <div class="canvas-layer" bind:this={canvasLayerRef}>
+    <div class="canvas-layer main-layer" bind:this={canvasLayerRef}>
       <Canvas createRenderer={createTransparentRenderer}>
         <T.PerspectiveCamera
           position={CONFIG_THREE_COMPONENTS.PerspectiveCamera.position as any}
@@ -304,26 +304,29 @@
             {cssHeight}
           />
         {/if}
-        {#if debug}
-          <TextureDebugPlane {backgroundTexture} scale={2.5} {CAMERA_FOV} />
+        {#if false}
+          <BlurEffect enabled={blurEnabled} blurScale={blurIntensity} />
         {/if}
       </Canvas>
     </div>
   {/if}
 
-  {#if capturedImageURL && debug}
-    <img
-      src={capturedImageURL}
-      alt="Debug Capture"
-      style="position: fixed; bottom: 10px; left: 10px; z-index: 99999; border: 5px solid red; background: white;width: 200px; height: 150px; object-fit: contain;"
-    />
-  {/if}
   <div class={`content-layer ${className}`} bind:this={contentRef} {style}>
     <slot />
   </div>
 </div>
 
 <style>
+  .main-layer,
+  .overlay-layer {
+    position: absolute;
+    inset: 0;
+  }
+
+  .overlay-layer {
+    pointer-events: none;
+    z-index: 2;
+  }
   .glass-box-container {
     --border-radius-container-glass-box: calc(var(--size) * 2);
     --border-container-glass-box: var(--glass-border);
@@ -364,6 +367,7 @@
     width: 100%;
     height: 100%;
 
+    backdrop-filter: blur(var(--blur-glass)) saturate(110%);
     z-index: 4;
     user-select: none;
   }
@@ -377,7 +381,6 @@
     padding: 20px;
     overflow: hidden;
     /* Estilos Glassmorphism */
-    backdrop-filter: blur(var(--blur-glass)) saturate(110%);
     filter: var(--glass-shadow);
     /* background-color: var(--glass-surface);*/
   }

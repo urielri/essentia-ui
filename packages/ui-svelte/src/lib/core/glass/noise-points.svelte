@@ -89,7 +89,6 @@
       transparent: true,
       depthTest: false,
       depthWrite: false, // Importante para máscaras superpuestas
-      blending: THREE.NormalBlending,
     });
 
     particles = new THREE.Points(geometry, material);

@@ -15,20 +15,16 @@
   export let glassMesh: Mesh | undefined;
   let shaderMaterial: ShaderMaterial;
 
-  const REFRACTION_SHADER = {
-    uniforms: {
-      tBackground: { value: null }, // Textura del Render Target (el fondo capturado)
-      tDepth: { value: null }, // Aunque se declara, no lo usaremos directamente para simplificar.
-      uScale: { value: new THREE.Vector3(1, 1, 1) }, // Nuevo Uniform
-      uTime: { value: 0.0 },
-      uDistortion: { value: 1.0 }, // Intensidad de la distorsión
-      uRefractionRatio: { value: 0.98 }, // Coeficiente de refracción (aire/vidrio)
-      uCameraPos: { value: new THREE.Vector3() }, // Posición global de la cámara
-      uMouseMagnitude: { value: 0.0 },
-      uBaseColor: { value: new THREE.Color(0.8, 0.8, 0.8) }, // Gris claro
-    },
-    vertexShader,
-    fragmentShader,
+  const uniforms = {
+    tBackground: { value: null }, // Textura del Render Target (el fondo capturado)
+    tDepth: { value: null }, // Aunque se declara, no lo usaremos directamente para simplificar.
+    uScale: { value: new THREE.Vector3(1, 1, 1) }, // Nuevo Uniform
+    uTime: { value: 0.0 },
+    uDistortion: { value: 1.0 }, // Intensidad de la distorsión
+    uRefractionRatio: { value: 0.98 }, // Coeficiente de refracción (aire/vidrio)
+    uCameraPos: { value: new THREE.Vector3() }, // Posición global de la cámara
+    uMouseMagnitude: { value: 0.0 },
+    uBaseColor: { value: new THREE.Color(0.8, 0.8, 0.8) }, // Gris claro
   };
 
   // --- FUNCIONES CORE ---
@@ -41,10 +37,12 @@
 
     glassGeometry = activeMesh.geometry.clone();
     shaderMaterial = new THREE.ShaderMaterial({
-      uniforms: THREE.UniformsUtils.clone(REFRACTION_SHADER.uniforms),
-      vertexShader: REFRACTION_SHADER.vertexShader,
-      fragmentShader: REFRACTION_SHADER.fragmentShader,
+      uniforms,
+      vertexShader: vertexShader,
+      fragmentShader: fragmentShader,
       transparent: true,
+
+      blending: THREE.NormalBlending,
     });
 
     // 2. Asignar Textura y Uniformes
@@ -110,7 +108,7 @@
     glassMesh.position.copy(activeMesh.position);
     glassMesh.rotation.copy(activeMesh.rotation);
     glassMesh.scale.copy(activeMesh.scale);
-    glassMesh.position.z += 0.001;
+    // glassMesh.position.z += 0.001;
 
     // Animación del Shader
     totalElapsed += delta;

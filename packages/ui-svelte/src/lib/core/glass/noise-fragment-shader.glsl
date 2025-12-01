@@ -12,7 +12,7 @@ void main() {
     
     // Opacidad Ajustada para NormalBlending
     // Subimos de 0.1 a 0.4 porque ya no se suman exponencialmente
-    float opacity = shape * vAlpha * 0.1; 
+    float opacity = shape * vAlpha * 0.001; 
     
     gl_FragColor = vec4(uBaseColor, opacity);
 }

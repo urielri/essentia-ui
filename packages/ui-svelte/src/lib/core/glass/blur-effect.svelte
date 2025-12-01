@@ -1,57 +1,147 @@
+<!-- blur-effect.svelte -->
 <script lang="ts">
-  import { T } from "@threlte/core";
-  import * as THREE from "three";
+  import { useThrelte, useTask } from "@threlte/core";
+  import { onDestroy, onMount } from "svelte";
+  import {
+    EffectComposer,
+    RenderPass,
+    KawaseBlurPass,
+    KernelSize,
+  } from "postprocessing";
 
-  export let inputTexture: THREE.Texture | null = null;
-  export let blurAmount: number = 5.0;
+  export let blurScale: number = 2.0;
+  export let kernelSize: KernelSize = KernelSize.MEDIUM;
+  export let enabled: boolean = true;
 
-  const blurVertexShader = `
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = vec4(position, 1.0);
+  const { scene, camera, renderer, size, autoRender, renderStage } =
+    useThrelte();
+
+  let composer: EffectComposer | undefined;
+  let kawaseBlurPass: KawaseBlurPass | undefined;
+  let initialized = false;
+
+  // IMPORTANTE: Guardar el estado original de autoRender
+  let originalAutoRender = true;
+
+  onMount(() => {
+    // Guardar el estado original
+    originalAutoRender = autoRender.current;
+  });
+
+  function initializeComposer() {
+    if (
+      initialized ||
+      !renderer ||
+      !scene ||
+      !camera.current ||
+      !$size.width ||
+      !$size.height
+    ) {
+      return;
     }
-  `;
 
-  const blurFragmentShader = `
-    uniform sampler2D tDiffuse;
-    uniform vec2 uResolution;
-    uniform float uBlurAmount;
-    varying vec2 vUv;
-    
-    void main() {
-      vec2 texelSize = 1.0 / uResolution;
-      vec4 color = vec4(0.0);
-      float total = 0.0;
-      
-      // Blur gaussiano simple (9 samples)
-      for(float x = -1.0; x <= 1.0; x++) {
-        for(float y = -1.0; y <= 1.0; y++) {
-          vec2 offset = vec2(x, y) * texelSize * uBlurAmount;
-          float weight = 1.0; // Simplificado, puedes usar pesos gaussianos
-          color += texture2D(tDiffuse, vUv + offset) * weight;
-          total += weight;
-        }
+    console.log("🎨 Initializing Blur Effect");
+
+    try {
+      // IMPORTANTE: Desactivar autoRender ANTES de crear el composer
+      autoRender.set(false);
+
+      // Verificar que el renderer tiene contexto
+      const gl = renderer.getContext();
+      if (!gl) {
+        console.error("No WebGL context available");
+        autoRender.set(originalAutoRender);
+        return;
       }
-      
-      gl_FragColor = color / total;
+
+      // Crear el composer SIN opciones adicionales
+      composer = new EffectComposer(renderer);
+
+      // Pass 1: Render Pass
+      const renderPass = new RenderPass(scene, camera.current);
+      composer.addPass(renderPass);
+
+      // Pass 2: Kawase Blur Pass
+      kawaseBlurPass = new KawaseBlurPass({
+        kernelSize: kernelSize,
+        resolutionScale: 0.5,
+        width: $size.width,
+        height: $size.height,
+      });
+
+      kawaseBlurPass.scale = blurScale;
+      kawaseBlurPass.enabled = enabled;
+      composer.addPass(kawaseBlurPass);
+
+      // Set size
+      composer.setSize($size.width, $size.height);
+
+      initialized = true;
+      console.log("✅ Blur Effect initialized");
+    } catch (error) {
+      console.error("❌ Failed to initialize:", error);
+      // Restaurar autoRender si falla
+      autoRender.set(originalAutoRender);
+      initialized = false;
     }
-  `;
+  }
 
-  $: uniforms = {
-    tDiffuse: { value: inputTexture },
-    uResolution: { value: new THREE.Vector2(512, 512) },
-    uBlurAmount: { value: blurAmount },
-  };
+  onDestroy(() => {
+    if (composer) {
+      composer.dispose();
+      composer = undefined;
+    }
+    if (kawaseBlurPass) {
+      kawaseBlurPass.dispose();
+      kawaseBlurPass = undefined;
+    }
+    // Restaurar autoRender al destruir
+    autoRender.set(originalAutoRender);
+    initialized = false;
+  });
+
+  // Inicializar cuando el tamaño sea válido
+  $: if (!initialized && $size.width > 0 && $size.height > 0) {
+    initializeComposer();
+  }
+
+  // Actualizar tamaño
+  $: if (initialized && composer && $size.width > 0 && $size.height > 0) {
+    composer.setSize($size.width, $size.height);
+    kawaseBlurPass?.setSize($size.width, $size.height);
+  }
+
+  // Actualizar parámetros
+  $: if (kawaseBlurPass) {
+    kawaseBlurPass.scale = blurScale;
+    kawaseBlurPass.enabled = enabled;
+  }
+
+  // Render loop - REEMPLAZA el render normal de Threlte
+  useTask(
+    (delta) => {
+      if (!initialized) {
+        if ($size.width > 0 && $size.height > 0) {
+          initializeComposer();
+        }
+        return;
+      }
+
+      if (composer && enabled) {
+        try {
+          // El composer renderiza la escena
+          composer.render(delta);
+        } catch (error) {
+          console.error("Render error:", error);
+        }
+      } else if (!enabled && renderer && scene && camera.current) {
+        // Si blur está desactivado, renderizar normal
+        renderer.render(scene, camera.current);
+      }
+    },
+    {
+      stage: renderStage,
+      autoInvalidate: false, // Importante: false
+    },
+  );
 </script>
-
-<T.Mesh>
-  <T.PlaneGeometry args={[2, 2]} />
-  <T.ShaderMaterial
-    vertexShader={blurVertexShader}
-    fragmentShader={blurFragmentShader}
-    {uniforms}
-    depthTest={false}
-    depthWrite={false}
-  />
-</T.Mesh>

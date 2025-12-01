@@ -25,7 +25,9 @@
   },
   "dependencies": {
     "@threlte/core": "^8.1.5",
+    "@threlte/extras": "^9.7.1",
     "html2canvas": "^1.4.1",
+    "postprocessing": "^6.38.0",
     "svelte": "^5.39.11",
     "three": "^0.180.0"
   },

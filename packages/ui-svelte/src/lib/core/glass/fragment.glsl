@@ -70,16 +70,16 @@ void main() {
     float fresnelFactor = pow(f, 0.3);
 
     // Edge mask based on UV distance from center
-    vec2 centerUV = vUv - vec2(0.3);
+    vec2 centerUV = vUv - vec2(0.5);
     float distanceFromCenter = length(centerUV);
     float borderMask = pow(distanceFromCenter, 3.0);
 
     // 3) Complex distortion: FBM-driven flow field (angle-based)
-    float timeFactor = uTime * 0.15;
+    float timeFactor = uTime * 0.1;
     float fbmScale = 1.0;
 
     float n1 = fbm(vec3(screenUV * fbmScale, timeFactor));
-    float n2 = fbm(vec3(screenUV * fbmScale * 1.7 + vec2(5.2), timeFactor * 1.1));
+    float n2 = fbm(vec3(screenUV * fbmScale * 2.5 + vec2(5.2), timeFactor * 0.1));
 
     // Build a direction from the noise (angle) and modulate magnitude by another fbm
     float angle = n2 * 6.28318530718; // 2*pi

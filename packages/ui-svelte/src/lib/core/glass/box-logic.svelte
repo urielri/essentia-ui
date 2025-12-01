@@ -40,7 +40,7 @@
   // 2. FACTOR DE BORDE: Define dónde se dibuja la línea blanca (95% del viewport)
   const BORDER_INSET = 0.95;
 
-  const { size, invalidate, camera, renderer, scene } = useThrelte();
+  const { invalidate, camera, renderer, scene } = useThrelte();
 
   $: distanceToBackground = Math.abs(
     (camera.current?.position.z ?? CAMERA_Z) - BACKGROUND_Z,
@@ -85,7 +85,7 @@
         renderTarget.setSize(rtWidth, rtHeight);
       }
 
-      // ... resto del código ...
+      backgroundTexture = renderTarget.texture; // Asignar Textura del RT
 
       if (!normalRenderTarget) {
         normalRenderTarget = new THREE.WebGLRenderTarget(rtWidth, rtHeight, {
@@ -96,7 +96,6 @@
       } else {
         normalRenderTarget.setSize(rtWidth, rtHeight);
       }
-
       invalidate();
     }
   }
