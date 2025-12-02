@@ -164,11 +164,3 @@
     invalidate();
   });
 </script>
-
-<GlassPlane
-  {distortion}
-  {backgroundTexture}
-  {mouseMagnitude}
-  bind:glassMesh
-  bind:activeMesh
-/>

@@ -91,8 +91,6 @@
     dpr = window.devicePixelRatio || 1;
     cssWidth = rect.width;
     cssHeight = rect.height;
-
-    console.log("Updated dimensions:", { dpr, cssWidth, cssHeight });
   }
 
   $: if (canvasLayerRef && !threlteCanvas) {
@@ -304,7 +302,7 @@
             {cssHeight}
           />
         {/if}
-        {#if false}
+        {#if true}
           <BlurEffect enabled={blurEnabled} blurScale={blurIntensity} />
         {/if}
       </Canvas>
@@ -321,6 +319,7 @@
   .overlay-layer {
     position: absolute;
     inset: 0;
+    overflow: hidden;
   }
 
   .overlay-layer {
@@ -367,7 +366,9 @@
     width: 100%;
     height: 100%;
 
+    /*
     backdrop-filter: blur(var(--blur-glass)) saturate(110%);
+*/
     z-index: 4;
     user-select: none;
   }

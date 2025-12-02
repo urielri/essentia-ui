@@ -101,7 +101,7 @@ void main() {
 
     // 5) Final composition: subtle Fresnel highlight and opacity by border
     float fresnelShine = fresnelFactor * 0.45;
-    const float MIN_OPACITY = 0.3;
+    const float MIN_OPACITY = 0.1;
     const float MAX_OPACITY = 1.0;
     float glassOpacity = MIN_OPACITY + (MAX_OPACITY - MIN_OPACITY) * borderMask;
 
