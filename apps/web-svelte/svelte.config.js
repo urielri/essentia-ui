@@ -25,7 +25,7 @@ const config = {
 
       "#core/*": path.resolve(
         __dirname,
-        "../../packages/ui-svelte/src/lib/core/*",
+        "../../packages/ui-svelte/src/lib/core-deprecated/*",
       ),
     },
   },

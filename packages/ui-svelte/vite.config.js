@@ -11,7 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "#lib": path.resolve(__dirname, "./src/lib"),
-      "#core": path.resolve(__dirname, "./src/lib/core"),
+      "#core": path.resolve(__dirname, "./src/lib/core-deprecated"),
     },
   },
 });

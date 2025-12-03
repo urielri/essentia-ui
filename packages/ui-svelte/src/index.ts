@@ -6,8 +6,9 @@ import {
   Content,
   FullWidth,
 } from "./lib/components/layout/index";
-import GlassBox from "./lib/core/glass/box.svelte";
+//@deprecated
+import GlassBox from "./lib/core-deprecated/glass/box.svelte";
+
+import Wrapper from "./lib/webGL/core/Wrapper.svelte";
 const Layout = { Header, Footer, Root, Content, FullWidth };
-export { Layout, GlassBox };
-//import * as HeaderModule from "./lib/components/layout/atoms/header.svelte";
-//export const Header = HeaderModule.default;
+export { Layout, GlassBox, Wrapper };
