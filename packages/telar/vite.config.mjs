@@ -7,5 +7,6 @@ export default defineConfig({
     ...generalConfig.test,
     setupFiles: ["./globalMock.js"],
     environment: "jsdom",
+    include: ["src/__tests__/**/*.{test,spec}.{ts,tsx}"],
   },
 });

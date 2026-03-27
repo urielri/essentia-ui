@@ -1,16 +1,27 @@
 {
   "name": "@repo/telar",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "private": true,
   "scripts": {
-    "test:puma": "vitest"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "exports": {
-    ".": "./index.ts"
+    ".": "./index.ts",
+    "./react": "./react.ts",
+    "./server": "./server.ts"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
   },
   "devDependencies": {
     "@repo/vite-config": "*",
-    "@testing-library/react": "16.2.0"
+    "@testing-library/react": "16.2.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "vitest": "^4.1.2"
   }
 }
