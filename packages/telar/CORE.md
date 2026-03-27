@@ -423,9 +423,11 @@ export function getDefaultValue<T>(node: AnyNode<T>): T
 
 Usado como `getServerSnapshot` en `useSyncExternalStore` de React. React llama a este snapshot durante el Server-Side Rendering (SSR), donde no existe un store activo.
 
-**Para threads:** ejecuta `node.get` con un `read` que recursivamente llama `getDefaultValue` en las dependencias. No construye el grafo ni cachea.
+**Para threads:** ejecuta `node.get` con un `read` que recursivamente llama `getDefaultValue` en las dependencias. No construye el grafo. El resultado se cachea en un `WeakMap` externo al store, keyed por la definición del nodo.
 
 **Para knot/bind:** retorna directamente `node.default`.
+
+**Por qué el cache en WeakMap:** React llama a `getServerSnapshot` repetidamente durante la hidratación para verificar consistencia entre servidor y cliente. Si un thread retorna un objeto o array nuevo en cada llamada (referencias distintas aunque los datos sean iguales), React detecta que el store "sigue cambiando" y entra en un loop infinito. El `WeakMap` garantiza que la misma referencia se retorne en todas las llamadas para el mismo nodo. Como los defaults son estáticos (definidos a nivel de módulo), el cache nunca queda obsoleto.
 
 ---
 
@@ -573,3 +575,4 @@ Propiedades que el sistema garantiza en todo momento:
 | Un valor idéntico no genera re-renders | `Object.is` antes de escribir |
 | El grafo nunca tiene ciclos | Los threads son read-only; nunca pueden escribir en un knot |
 | Los defaults nunca producen `undefined` en updaters | `setNodeValue` recibe `defaultValue` explícito |
+| `getServerSnapshot` no produce loop de hidratación | `getDefaultValue` cachea resultados de threads en un `WeakMap` |

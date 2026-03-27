@@ -63,8 +63,6 @@ setPrice(prev => prev * 1.1);
 **Propiedades:**
 - Sin dependencias entrantes — es un vértice fuente en el grafo
 - Escritura libre mediante valor directo o función actualizadora
-- Puede persistirse declarativamente (`persist: 'localStorage'`)
-- Puede tener historial de cambios (`history: true`)
 
 ---
 
@@ -124,9 +122,10 @@ dispatch.clear();
 ## Los hooks
 
 ```typescript
-useKnot(knot)     // → [value, SetterOrUpdater<T>]
-useThread(thread) // → T (readonly)
-useBind(bind)     // → [state, Dispatch]
+useKnot(knot)         // → [value, SetterOrUpdater<T>]
+useThread(thread)     // → T (readonly)
+useBind(bind)         // → [state, Dispatch]
+useDispatch(bind)     // → Dispatch  (sin suscripción — no re-renderiza al cambiar el estado)
 ```
 
 Hook unificado que infiere el tipo automáticamente:
@@ -135,6 +134,20 @@ Hook unificado que infiere el tipo automáticamente:
 useTelar(knot)    // → [value, setter]
 useTelar(thread)  // → value
 useTelar(bind)    // → [state, dispatch]
+```
+
+### `useDispatch` — escritura sin suscripción
+
+Un componente que solo necesita disparar acciones sobre un `bind` no debería
+re-renderizarse cuando ese estado cambia. `useDispatch` resuelve exactamente eso:
+retorna el objeto dispatch sin registrar ninguna suscripción en el store.
+
+```typescript
+// Este componente nunca se re-renderiza cuando la lista de todos cambia
+function AddTodoInput() {
+  const dispatch = useDispatch(todosBind)
+  return <button onClick={() => dispatch.add(newTodo)}>Agregar</button>
+}
 ```
 
 ---
@@ -253,7 +266,7 @@ El estado vive dentro del árbol de React, no en el módulo. Cada `TelarRoot` ti
 |---|---|---|---|---|
 | Modelo | Grafo atómico | Grafo atómico | Store plana | Grafo de nudos |
 | Mantenimiento | Abandonado | Activo | Activo | Activo |
-| Hidratación SSR | Manual | Manual (`useHydrateAtoms`) | Manual | Declarativa (`prefetchKnot`) |
+| Hidratación SSR | Manual | Manual (`useHydrateAtoms`) | Manual | Declarativa (`createPrefetchContext`) |
 | Store en módulo | No | No | Sí (singleton) | No |
 | Reducers nativos | No | No | Sí (en store) | Sí (en cada `bind`) |
 | Estado derivado | Selectores | Átomos derivados | `useMemo` manual | `thread` |
@@ -264,13 +277,13 @@ El estado vive dentro del árbol de React, no en el módulo. Cada `TelarRoot` ti
 
 ## Visión — Roadmap
 
-### V1
+### V1 ✓ implementado
 - `knot` — estado base con setter libre
 - `thread` — estado derivado con grafo de dependencias dinámico
 - `bind` — estado con reducers tipados
-- `TelarRoot` — store aislado por árbol React
-- `prefetchKnot` — inicialización desde Server Components
-- `useKnot` / `useThread` / `useBind` / `useTelar`
+- `TelarRoot` — store aislado por árbol React, con soporte `initialValues` para SSR
+- `createPrefetchContext` — inicialización desde el servidor (RSC y `getServerSideProps`)
+- `useKnot` / `useThread` / `useBind` / `useDispatch` / `useTelar`
 
 ### V2
 - **Validación con schema** — integración con Zod para validar el valor de un knot en escritura
