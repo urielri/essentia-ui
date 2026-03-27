@@ -12,6 +12,9 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "dependencies": {
+    "@repo/godoy": "workspace:*"
+  },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@repo/eslint-config": "workspace:*",

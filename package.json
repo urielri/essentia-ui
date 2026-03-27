@@ -22,7 +22,7 @@
   },
   "packageManager": "pnpm@10.19.0",
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.0",

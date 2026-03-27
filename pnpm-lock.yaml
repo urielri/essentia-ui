@@ -90,6 +90,10 @@ importers:
         version: 5.9.3
 
   apps/web:
+    dependencies:
+      '@repo/godoy':
+        specifier: workspace:*
+        version: link:../../packages/godoy
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3
@@ -216,28 +220,6 @@ importers:
       three:
         specifier: ^0.180.0
         version: 0.180.0
-    devDependencies:
-      '@repo/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:../typescript-config
-      '@repo/vite-config':
-        specifier: workspace:*
-        version: link:../vite-config
-      '@turbo/gen':
-        specifier: ^1.12.4
-        version: 1.13.4(@types/node@24.10.1)(typescript@5.9.3)
-      vite:
-        specifier: ^6.0.11
-        version: 6.4.1(@types/node@24.10.1)(jiti@1.21.7)
-
-  packages/ui-old:
-    dependencies:
-      clsx:
-        specifier: ^2.1.1
-        version: 2.1.1
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*
