@@ -33,7 +33,7 @@
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
     "@repo/vite-config": "*",
-    "@turbo/gen": "^1.12.4",
+    "@turbo/gen": "^2.8.20",
     "vite": "^6.0.11"
   },
   "dependencies": {
