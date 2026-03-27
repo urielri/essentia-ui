@@ -10,7 +10,8 @@
       "Bash(npm install:*)",
       "Bash(npm:*)",
       "Bash(xargs sed:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(cp:*)"
     ]
   }
 }
