@@ -63,11 +63,7 @@ const Component: FC<I> = ({ ...props }) => {
     }
   };
   const size = { width, height };
-  const sC =
-    ({
-      ...size,
-      ...styleContainer,
-    } as CSSProperties) || {};
+  const sC = { ...size, ...styleContainer } as CSSProperties;
   return (
     <div
       className={`${s.input} ${

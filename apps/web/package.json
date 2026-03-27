@@ -13,15 +13,17 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@repo/telar": "*"
+    "@repo/telar": "*",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@repo/eslint-config": "*",
-    "@repo/typescript-config": "*",
-    "@repo/vite-config": "*",
     "@repo/prettier-config": "*",
+    "@repo/typescript-config": "*",
     "@repo/ui": "*",
+    "@repo/vite-config": "*",
     "eslint": "^9",
     "eslint-config-next": "15.1.4"
   }

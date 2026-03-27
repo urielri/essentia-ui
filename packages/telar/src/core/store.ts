@@ -53,13 +53,27 @@ function evaluateThread<T>(node: ThreadDef<T>, store: Store): T {
 }
 
 /**
+ * Cache de defaults para threads. Keyed por la definición del nodo (referencia
+ * de objeto) para garantizar estabilidad referencial entre llamadas.
+ * Necesario porque React exige que getServerSnapshot retorne la misma
+ * referencia si los datos no cambiaron — de lo contrario entra en loop.
+ */
+const defaultCache = new WeakMap<object, unknown>()
+
+/**
  * Retorna el valor por defecto de un nodo sin acceder al store.
  * Usado como getServerSnapshot en useSyncExternalStore.
+ *
+ * Para threads: el resultado se cachea en defaultCache para que React
+ * reciba la misma referencia en llamadas sucesivas (requisito de hidratación).
  */
 export function getDefaultValue<T>(node: AnyNode<T>): T {
   if (node._brand === 'thread') {
+    if (defaultCache.has(node)) return defaultCache.get(node) as T
     const read = <U>(dep: AnyNode<U>): U => getDefaultValue(dep)
-    return node.get({ read })
+    const value = node.get({ read })
+    defaultCache.set(node, value)
+    return value
   }
   return node.default
 }

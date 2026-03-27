@@ -1,2 +1,2 @@
-export { prefetchKnot, getServerCache, clearServerCache } from './src/server/prefetch'
-export type { ServerKnotDef, ServerContext } from './src/server/prefetch'
+export { createPrefetchContext } from './src/server/prefetch'
+export type { ServerKnotDef, ServerContext, PrefetchContext } from './src/server/prefetch'

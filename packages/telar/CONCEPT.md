@@ -139,9 +139,11 @@ useTelar(bind)    // → [state, dispatch]
 
 ---
 
-## Integración con React Server Components
+## Integración con el servidor
 
-Telar soporta inicialización desde el servidor de forma declarativa. En lugar de listar nudos manualmente para hidratar, cada Server Component declara qué nudos necesita prefetchear:
+Telar soporta inicialización desde el servidor a través de `createPrefetchContext`. La misma API funciona en React Server Components y en SSR tradicional con `getServerSideProps`.
+
+La definición del knot declara su propia lógica de obtención de datos en el servidor:
 
 ```typescript
 // Definición compartida entre server y client
@@ -155,31 +157,56 @@ const userKnot = knot({
 });
 ```
 
+**React Server Components (Next.js App Router)**
+
 ```tsx
-// Server Component
 export default async function Page() {
-  await prefetchKnot(userKnot);
-  await prefetchKnot(cartKnot);
+  const prefetch = createPrefetchContext()
+
+  await prefetch(userKnot)
+  await prefetch(cartKnot)
 
   return (
-    <TelarRoot>
+    <TelarRoot initialValues={prefetch.flush()}>
       <App />
     </TelarRoot>
-  );
+  )
 }
 
 // Client Component — el knot ya tiene el valor del servidor
 function UserProfile() {
-  const [user] = useKnot(userKnot);
-  // user nunca fue null — no hay loading state inicial
+  const [user] = useKnot(userKnot)
+  // user nunca fue null — sin loading state inicial
+}
+```
+
+**SSR tradicional con getServerSideProps**
+
+```typescript
+export async function getServerSideProps(ctx) {
+  const prefetch = createPrefetchContext(ctx)
+
+  await prefetch(userKnot)
+  await prefetch(cartKnot)
+
+  return { props: { initialValues: prefetch.flush() } }
+}
+
+export default function Page({ initialValues }) {
+  return (
+    <TelarRoot initialValues={initialValues}>
+      <App />
+    </TelarRoot>
+  )
 }
 ```
 
 **Flujo:**
-1. `prefetchKnot` ejecuta la función `server` del knot en el servidor
-2. `TelarRoot` serializa los valores y los embebe en el HTML
-3. El cliente hidrata el grafo con esos valores antes del primer render
-4. A partir de ahí todo es reactivo en el cliente
+1. `createPrefetchContext` crea un cache aislado por request
+2. Cada `prefetch(knot)` ejecuta la función `server` del knot y aplica `sanitize`
+3. `prefetch.flush()` serializa los valores como objeto plano para pasar como props
+4. `TelarRoot` recibe `initialValues` y precarga el store antes del primer render
+5. El cliente hidrata con los datos ya disponibles — sin loading state inicial
 
 ---
 

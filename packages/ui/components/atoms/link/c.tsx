@@ -52,7 +52,7 @@ export const Link: FC<PropsWithChildren<Props>> = ({
     <NextLink
       {...rest}
       className={buildClassName(
-        s.link,
+        s.link!,
         disabled,
         className,
         size,

@@ -1,0 +1,161 @@
+/* ─── Página ─────────────────────────────────────────────────────────────── */
+
+.docs-page {
+  min-height: 100vh;
+  background: #0d1117;
+  padding: 3rem 1.5rem 6rem;
+}
+
+.docs-content {
+  max-width: 860px;
+  margin: 0 auto;
+  color: #e6edf3;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+/* ─── Headings ───────────────────────────────────────────────────────────── */
+
+.docs-content h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #f0f6fc;
+  border-bottom: 1px solid #30363d;
+  padding-bottom: 0.5rem;
+  margin: 0 0 2rem;
+}
+
+.docs-content h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #f0f6fc;
+  border-bottom: 1px solid #21262d;
+  padding-bottom: 0.3rem;
+  margin: 2.5rem 0 1rem;
+}
+
+.docs-content h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #cdd9e5;
+  margin: 2rem 0 0.75rem;
+}
+
+/* ─── Párrafos y texto ───────────────────────────────────────────────────── */
+
+.docs-content p {
+  margin: 0 0 1rem;
+  color: #cdd9e5;
+}
+
+.docs-content strong {
+  color: #f0f6fc;
+  font-weight: 600;
+}
+
+.docs-content em {
+  color: #cdd9e5;
+}
+
+/* ─── Código inline ──────────────────────────────────────────────────────── */
+
+.docs-content :not(pre) > code {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  padding: 0.15em 0.45em;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.875em;
+  color: #e6869a;
+}
+
+/* ─── Bloques de código ──────────────────────────────────────────────────── */
+
+.docs-content pre {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  overflow-x: auto;
+  margin: 1rem 0 1.5rem;
+  line-height: 1.6;
+}
+
+.docs-content pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.875rem;
+  color: #e6edf3;
+}
+
+/* ─── Tablas ─────────────────────────────────────────────────────────────── */
+
+.docs-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0 1.5rem;
+  font-size: 0.9rem;
+}
+
+.docs-content th {
+  background: #161b22;
+  color: #f0f6fc;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.6rem 1rem;
+  border: 1px solid #30363d;
+}
+
+.docs-content td {
+  padding: 0.55rem 1rem;
+  border: 1px solid #21262d;
+  color: #cdd9e5;
+  vertical-align: top;
+}
+
+.docs-content tr:nth-child(even) td {
+  background: #0d1117;
+}
+
+.docs-content tr:nth-child(odd) td {
+  background: #10161d;
+}
+
+/* ─── Listas ─────────────────────────────────────────────────────────────── */
+
+.docs-content ul,
+.docs-content ol {
+  padding-left: 1.5rem;
+  margin: 0 0 1rem;
+}
+
+.docs-content li {
+  margin-bottom: 0.3rem;
+  color: #cdd9e5;
+}
+
+.docs-content li > code {
+  font-size: 0.85em;
+}
+
+/* ─── Separadores ────────────────────────────────────────────────────────── */
+
+.docs-content hr {
+  border: none;
+  border-top: 1px solid #21262d;
+  margin: 2.5rem 0;
+}
+
+/* ─── Blockquote ─────────────────────────────────────────────────────────── */
+
+.docs-content blockquote {
+  border-left: 3px solid #388bfd;
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  background: #161b22;
+  border-radius: 0 4px 4px 0;
+  color: #8b949e;
+}
