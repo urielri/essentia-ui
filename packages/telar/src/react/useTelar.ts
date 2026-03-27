@@ -13,6 +13,27 @@ import type {
 
 // ─── Overloads ────────────────────────────────────────────────────────────────
 
+/**
+ * Hook unificado que infiere el tipo de retorno según el tipo de nodo.
+ *
+ * Es equivalente a llamar `useKnot`, `useThread` o `useBind` directamente,
+ * pero con una única importación. TypeScript estrecha el tipo de retorno
+ * automáticamente a partir del tipo del argumento.
+ *
+ * Usar los hooks especializados cuando la intención es explícita;
+ * usar `useTelar` cuando se prefiere la API unificada o se construyen
+ * abstracciones genéricas sobre nodos.
+ *
+ * @example
+ * const filterKnot  = knot({ key: 'filter', default: 'all' })
+ * const totalThread = thread({ key: 'total', get: ({ read }) => read(cartKnot).length })
+ * const cartBind    = bind({ key: 'cart', default: [], reducers: { add: ... } })
+ *
+ * // En componentes:
+ * const [filter, setFilter] = useTelar(filterKnot)   // → [T, setter]
+ * const total               = useTelar(totalThread)   // → T
+ * const [cart, dispatch]    = useTelar(cartBind)      // → [T, dispatch]
+ */
 export function useTelar<T>(def: KnotDef<T>): [T, (next: SetterOrUpdater<T>) => void]
 export function useTelar<T>(def: ThreadDef<T>): T
 export function useTelar<T, R extends Reducers<T>>(def: BindDef<T, R>): [T, Dispatch<T, R>]
