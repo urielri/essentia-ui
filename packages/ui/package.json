@@ -30,9 +30,9 @@
     "postpack": "node ./scripts/postpack.js"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
-    "@repo/vite-config": "workspace:*",
+    "@repo/eslint-config": "*",
+    "@repo/typescript-config": "*",
+    "@repo/vite-config": "*",
     "@turbo/gen": "^1.12.4",
     "vite": "^6.0.11"
   },

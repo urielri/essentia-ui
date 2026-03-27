@@ -13,15 +13,15 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@repo/godoy": "workspace:*"
+    "@repo/godoy": "*"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
-    "@repo/vite-config": "workspace:*",
-    "@repo/prettier-config": "workspace:*",
-    "@repo/ui": "workspace:*",
+    "@repo/eslint-config": "*",
+    "@repo/typescript-config": "*",
+    "@repo/vite-config": "*",
+    "@repo/prettier-config": "*",
+    "@repo/ui": "*",
     "eslint": "^9",
     "eslint-config-next": "15.1.4"
   }

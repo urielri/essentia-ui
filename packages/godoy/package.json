@@ -10,7 +10,7 @@
     ".": "./index.ts"
   },
   "devDependencies": {
-    "@repo/vite-config": "workspace:*",
+    "@repo/vite-config": "*",
     "@testing-library/react": "16.2.0"
   }
 }

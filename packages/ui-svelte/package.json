@@ -32,7 +32,7 @@
     "three": "^0.180.0"
   },
   "devDependencies": {
-    "@repo/typescript-config": "workspace:*",
+    "@repo/typescript-config": "*",
     "@sveltejs/vite-plugin-svelte": "^6.0.0",
     "@tsconfig/svelte": "^5.0.0",
     "@types/three": "^0.180.0",
