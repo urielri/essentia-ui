@@ -100,6 +100,7 @@ type ThreadDef<T> = {
   readonly _brand: 'thread'
   readonly key: string
   readonly get: (ctx: ReadContext) => T
+  readonly equal?: (a: T, b: T) => boolean
 }
 
 type BindDef<T, R extends Reducers<T>> = {
@@ -113,6 +114,23 @@ type BindDef<T, R extends Reducers<T>> = {
 Estas estructuras son **definiciones**, no instancias de estado. Describen un nodo del grafo pero no contienen valores. El estado real vive en el `Store`.
 
 El campo `_brand` es un **discriminante de tipo literal** (branded type). Permite a TypeScript diferenciar los tres tipos en tiempo de compilación sin necesidad de `instanceof` ni duck typing. Cuando `useTelar` recibe un `AnyNode`, puede hacer `if (def._brand === 'thread')` y TypeScript estrecha el tipo automáticamente.
+
+El campo `equal` en `ThreadDef` es un comparador de igualdad opcional. Cuando se provee, se llama con el valor anterior y el nuevo después de cada re-evaluación. Si retorna `true`, el thread preserva la referencia antigua en cache — lo que garantiza que `useSyncExternalStore` no dispare un re-render aunque la función `get` retorne un objeto nuevo con los mismos valores.
+
+```typescript
+// Sin equal: re-renderiza aunque los números sean iguales (nueva referencia)
+const statsThread = thread({
+  key: 'stats',
+  get: ({ read }) => ({ total: read(todosKnot).length }),
+})
+
+// Con equal: no re-renderiza si total y done son iguales
+const statsThread = thread({
+  key: 'stats',
+  get: ({ read }) => ({ total: read(todosKnot).length, done: ... }),
+  equal: (a, b) => a.total === b.total && a.done === b.done,
+})
+```
 
 ---
 
@@ -136,14 +154,21 @@ Mantener ambas vistas en paralelo permite tanto reconstruir aristas eficientemen
 
 ---
 
-### `Store`
+### `CacheEntry` y `Store`
 
 ```typescript
+type CacheEntry = {
+  value: unknown
+  depEpochs: Map<string, number>
+}
+
 type Store = {
   values: Map<string, unknown>
+  epochs: Map<string, number>
   graph: Graph
   listeners: Map<string, Set<() => void>>
-  cache: Map<string, unknown>
+  cache: Map<string, CacheEntry>
+  dirty: Set<string>
 }
 ```
 
@@ -152,9 +177,15 @@ Estructura central del sistema. Cada `TelarRoot` crea un store independiente.
 | Campo | Propósito |
 |---|---|
 | `values` | Valores actuales de knots y binds, indexados por `key` |
+| `epochs` | Número de versión por nodo. Se incrementa en cada escritura (knots/binds) y cuando un thread produce un valor diferente al cacheado |
 | `graph` | Grafo de dependencias entre nodos |
 | `listeners` | Callbacks de componentes React suscritos a cada nodo |
-| `cache` | Valores calculados de threads. Se invalida selectivamente al escribir |
+| `cache` | Valores calculados de threads con sus `depEpochs` al momento de la evaluación |
+| `dirty` | Conjunto de thread keys que necesitan re-evaluación. Se llena en escritura (BFS) y se vacía en evaluación |
+
+`CacheEntry.depEpochs` captura el epoch de cada dep directa (knot/bind) en el momento de la última evaluación del thread. Permite en el futuro validar el cache sin re-evaluar cuando todos los epochs coinciden. Hoy, la validez se determina por `dirty`: si el thread no está en `dirty`, el cache es válido.
+
+`epochs` para threads se incrementa solo cuando el valor realmente cambia (respetando `equal`). Esto permite que threads downstream detecten si un thread intermedio produjo un cambio o no, sin necesidad de re-evaluarlo.
 
 ---
 
@@ -193,11 +224,13 @@ En un telar, un nudo (*knot*) es el punto donde un hilo se ancla. Es fijo, concr
 export function thread<T>(options: {
   key: string
   get: (ctx: ReadContext) => T
+  equal?: (a: T, b: T) => boolean
 }): ThreadDef<T> {
   return {
     _brand: 'thread',
     key: options.key,
     get: options.get,
+    equal: options.equal,
   }
 }
 ```
@@ -222,6 +255,7 @@ En el tejido, un hilo (*thread*) conecta nudo con nudo formando el patrón. En e
   ```
   Si el modo cambia de `'a'` a `'b'`, el grafo se reconstruye: el thread se desuscribe de `knotA` y se suscribe a `knotB`.
 - **Solo lectura:** `ThreadDef` no tiene campo `default` ni setters. Es imposible escribir directamente en un thread.
+- **Igualdad estructural opcional:** si se provee `equal`, el thread puede retornar nuevos objetos en `get` sin causar re-renders cuando los valores son estructuralmente idénticos. El comparador recibe `(prev, next)` y si retorna `true`, se devuelve la referencia anterior.
 
 ---
 
@@ -378,38 +412,56 @@ La rama `knot`/`bind` es O(1) (lookup en Map). La rama `thread` puede implicar u
 function evaluateThread<T>(node: ThreadDef<T>, store: Store): T
 ```
 
-**Concepto:** evalúa el thread con tracking de dependencias y gestiona el cache.
+**Concepto:** evalúa el thread con tracking de dependencias, gestiona el cache y aplica el comparador de igualdad.
 
 **Flujo:**
 
 ```
-1. ¿store.cache tiene node.key?
+1. ¿thread NOT en store.dirty Y cache existe?
    └─ Sí → retornar valor cacheado (O(1))
    └─ No → continuar
 
-2. Crear discoveredDeps = new Set()
+2. prevEntry = store.cache.get(node.key)  // guarda valor anterior para equal
 
-3. Crear trackingRead:
+3. Crear discoveredDeps = new Set()
+
+4. Crear trackingRead:
    función que, al ser llamada con dep,
    a) agrega dep.key a discoveredDeps
    b) llama getNodeValue(dep, store) recursivamente
 
-4. Llamar node.get({ read: trackingRead })
+5. newValue = node.get({ read: trackingRead })
    → ejecuta la función del usuario
    → cada read() dentro registra una dep
 
-5. rebuildGraphEdges(graph, node.key, discoveredDeps)
-   → actualiza el grafo con las deps reales
+6. Aplicar equal:
+   Si prevEntry existe Y node.equal Y node.equal(prevEntry.value, newValue)
+   → finalValue = prevEntry.value  (preservar referencia anterior)
+   Si no
+   → finalValue = newValue
 
-6. store.cache.set(node.key, value)
-   → guarda resultado
+7. Capturar depEpochs:
+   Por cada dep en discoveredDeps:
+     Si store.epochs tiene esa dep → depEpochs.set(dep, epoch)
 
-7. Retornar value
+8. Actualizar epoch del thread (solo si el valor cambió):
+   !Object.is(prevEntry?.value, finalValue)
+   → store.epochs.set(node.key, epoch + 1)
+
+9. store.dirty.delete(node.key)
+   rebuildGraphEdges(graph, node.key, discoveredDeps)
+   store.cache.set(node.key, { value: finalValue, depEpochs })
+
+10. Retornar finalValue
 ```
 
-**Por qué el cache es válido:** `setNodeValue` siempre borra el cache de los threads afectados **antes** de notificar a los componentes. Cuando un componente re-renderiza y llama `getNodeValue`, el cache ya fue invalidado si correspondía.
+**Por qué `dirty` reemplaza `cache.delete`:** en lugar de borrar el cache en escritura, `setNodeValue` marca el thread como `dirty`. Esto permite que `evaluateThread` acceda al valor anterior (`prevEntry`) para la comparación con `equal`. Si se borrara el cache, no habría valor previo con el que comparar.
 
-**Threads encadenados:** `trackingRead` llama `getNodeValue`, que a su vez puede llamar `evaluateThread` para threads que dependen de otros threads. La recursión termina porque el grafo es acíclico. El cache de threads intermedios también se reconstruye correctamente.
+**Por qué el cache es válido:** `setNodeValue` agrega a `dirty` todos los threads afectados **antes** de notificar. Cuando un componente re-renderiza y llama `getNodeValue`, el thread está en `dirty` y se re-evalúa.
+
+**Epochs de threads:** cuando un thread produce el mismo valor que el anterior (vía `equal`), su epoch no se incrementa. Esto permite que threads downstream que dependen de este thread detecten que no hubo cambio real, aunque el knot subyacente sí haya cambiado.
+
+**Threads encadenados:** `trackingRead` llama `getNodeValue`, que a su vez puede llamar `evaluateThread` para threads que dependen de otros threads. La recursión termina porque el grafo es acíclico. Si el thread intermedio está en `dirty`, se re-evalúa y se limpia de `dirty` antes de retornar al thread upstream.
 
 ---
 
@@ -460,11 +512,15 @@ export function setNodeValue<T>(
 4. Persistir:
    store.values.set(key, newValue)
 
-5. BFS de invalidación:
-   dirty = getDirtyNodes(key, graph)
-   Por cada dirtyKey: store.cache.delete(dirtyKey)
+5. Incrementar epoch del nodo escrito:
+   store.epochs.set(key, epoch + 1)
 
-6. Notificación:
+6. BFS de marcado dirty:
+   dirtyThreads = getDirtyNodes(key, graph)
+   Por cada dirtyKey: store.dirty.add(dirtyKey)
+   // No se borra el cache — se preserva prevEntry para la comparación con equal
+
+7. Notificación:
    notifyKey(key, store)
    Por cada dirtyKey: notifyKey(dirtyKey, store)
 ```
@@ -473,7 +529,9 @@ export function setNodeValue<T>(
 
 **Detalle del paso 3 (igualdad referencial):** usa `Object.is` en lugar de `===` para manejar correctamente `NaN` (`Object.is(NaN, NaN) === true`, mientras que `NaN === NaN === false`). Si el valor no cambió, no se invalida el cache ni se notifica a ningún componente.
 
-**Detalle del paso 5–6 (orden de operaciones):** el cache se invalida **antes** de notificar. Esto garantiza que cuando un componente React responde a la notificación y llama `getNodeValue`, encuentra el cache ya inválido y recalcula el valor correcto.
+**Detalle del paso 5 (epoch):** el epoch se incrementa incondicionalmente al confirmar el cambio. Sirve como identificador de versión para que threads downstream puedan detectar un cambio potencial sin re-evaluarse.
+
+**Detalle del paso 6–7 (orden de operaciones):** los threads se marcan `dirty` **antes** de notificar. Cuando un componente responde a la notificación y llama `getNodeValue`, el thread está en `dirty` y se re-evalúa con los datos correctos. El cache NO se borra — `evaluateThread` accede al valor previo para comparar con `equal`.
 
 ---
 
@@ -499,7 +557,9 @@ useSyncExternalStore(
 )
 ```
 
-**Gestión de memoria:** si no existe aún un `Set` para el key, se crea. Al llamar la función de limpieza, el listener se elimina del Set. Si el componente se desmonta sin que se llame al unsubscribe (caso de error), el listener permanece en el store hasta que el store sea descartado.
+**Gestión de memoria:** al llamar la función de cleanup, el listener se elimina del Set del key correspondiente. El cache, el dirty set y las aristas del grafo se preservan — esto permite que si el componente vuelve a montar, el thread reutilice el cache existente sin re-evaluarse desde cero.
+
+La limpieza completa de aristas del grafo y cache al desmontar el último suscriptor es una optimización planificada para V2. En V1 se omite deliberadamente: en React 18 con `useSyncExternalStore`, el cleanup se ejecuta durante el ciclo mount/unmount/remount de Strict Mode, y eliminar las aristas en ese momento puede provocar inconsistencias en los snapshots durante la reconciliación concurrente.
 
 ---
 
@@ -528,35 +588,38 @@ store.ts — setNodeValue:
   2. newValue = [...current, newTodo]
   3. Object.is(current, newValue) → false (nuevo array)
   4. store.values.set('todos', newValue)
+  5. store.epochs.set('todos', epoch + 1)
 
-  5. getDirtyNodes('todos', graph):
+  6. getDirtyNodes('todos', graph):
      BFS sobre nodeSubscriptions:
        'todos' → { 'filteredTodos', 'stats', 'todoState' }
-       'filteredTodos' → {} (sin downstream)
-       'stats' → {}
-       'todoState' → {}
      dirty = Set { 'filteredTodos', 'stats', 'todoState' }
 
-  6. cache.delete('filteredTodos')
-     cache.delete('stats')
-     cache.delete('todoState')
+     store.dirty.add('filteredTodos')
+     store.dirty.add('stats')
+     store.dirty.add('todoState')
+     // cache NO se borra — prevEntry queda disponible para equal
 
-  7. notifyKey('todos', store)        → sin listeners (TodoInput no lee todos)
+  7. notifyKey('todos', store)         → sin listeners (TodoInput usa useDispatch)
      notifyKey('filteredTodos', store) → notifica a TodoList
-     notifyKey('stats', store)        → notifica a TodoStats
-     notifyKey('todoState', store)    → notifica a TelarDevTools
+     notifyKey('stats', store)         → notifica a TodoStats
+     notifyKey('todoState', store)     → notifica a TelarDevTools
 
 React re-renderiza:
   TodoList llama getNodeValue(filteredTodosThread, store)
-    → cache inválido → evaluateThread()
-    → lee todosBind (valor nuevo) y filterKnot (sin cambio)
-    → recalcula lista filtrada
-    → cachea y retorna
+    → 'filteredTodos' está en dirty → re-evalúa
+    → prevEntry = cache.get('filteredTodos')  // valor anterior disponible
+    → lee todosBind (nuevo) y filterKnot (sin cambio)
+    → newValue = lista filtrada nueva
+    → si filteredTodosThread.equal definido → compara prevEntry.value con newValue
+    → cachea { value: finalValue, depEpochs }, dirty.delete('filteredTodos')
+    → retorna finalValue
 
   TodoStats llama getNodeValue(statsThread, store)
-    → cache inválido → evaluateThread()
-    → calcula nuevos totales
-    → cachea y retorna
+    → 'stats' está en dirty → re-evalúa
+    → si statsThread.equal definido y { total, done } son iguales:
+      → preserva referencia anterior → React no re-renderiza
+    → si cambiaron: retorna nuevo objeto → React re-renderiza
 ```
 
 `TodoInput` y `TodoFilter` no se re-renderizan: no tienen listeners activos sobre `'todos'`, `'filteredTodos'`, `'stats'` ni `'todoState'`.
@@ -569,10 +632,13 @@ Propiedades que el sistema garantiza en todo momento:
 
 | Invariante | Mecanismo |
 |---|---|
-| Un thread nunca tiene un valor de cache obsoleto | El cache se invalida antes de notificar |
+| Un thread nunca retorna un valor obsoleto | Se marca `dirty` antes de notificar; `evaluateThread` re-evalúa si `dirty` |
 | Las dependencias de un thread reflejan la última evaluación | `rebuildGraphEdges` se llama tras cada evaluación |
 | Dos `TelarRoot` nunca comparten estado | Cada `TelarRoot` crea su propio `Store` vía `createStore()` |
-| Un valor idéntico no genera re-renders | `Object.is` antes de escribir |
+| Un valor idéntico no genera re-renders | `Object.is` antes de escribir; `equal` en threads para igualdad estructural |
 | El grafo nunca tiene ciclos | Los threads son read-only; nunca pueden escribir en un knot |
 | Los defaults nunca producen `undefined` en updaters | `setNodeValue` recibe `defaultValue` explícito |
 | `getServerSnapshot` no produce loop de hidratación | `getDefaultValue` cachea resultados de threads en un `WeakMap` |
+| Los listeners de componentes desmontados no reciben notificaciones | `subscribeToNode` cleanup elimina el listener del Set |
+| Un thread con `equal` no re-renderiza si el valor es estructuralmente igual | `evaluateThread` preserva la referencia anterior cuando `equal` retorna `true` |
+| El epoch de un thread solo sube cuando el valor realmente cambia | `evaluateThread` incrementa epoch solo si `!Object.is(prevEntry.value, finalValue)` |

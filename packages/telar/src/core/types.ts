@@ -96,6 +96,24 @@ export type ThreadDef<T> = {
    * Cada `read(dep)` dentro registra `dep` como dependencia del thread.
    */
   readonly get: (ctx: ReadContext) => T
+  /**
+   * Comparador de igualdad custom para el valor calculado.
+   *
+   * Cuando se provee, se llama con el valor anterior (`a`) y el nuevo (`b`)
+   * luego de cada re-evaluación. Si retorna `true`, el thread preserva la
+   * referencia anterior en cache — evitando re-renders cuando el valor es
+   * estructuralmente idéntico aunque sea una nueva referencia de objeto.
+   *
+   * Por defecto se usa `Object.is` (identidad referencial).
+   *
+   * @example
+   * const statsThread = thread({
+   *   key: 'stats',
+   *   get: ({ read }) => ({ total: read(todosKnot).length }),
+   *   equal: (a, b) => a.total === b.total,
+   * })
+   */
+  readonly equal?: (a: T, b: T) => boolean
 }
 
 /**
@@ -137,18 +155,39 @@ export type Graph = {
 // ─── Store ────────────────────────────────────────────────────────────────────
 
 /**
+ * Entrada del cache de un thread.
+ *
+ * - `value`:     último valor calculado del thread
+ * - `depEpochs`: epoch de cada dep directa (knot/bind) al momento de la evaluación.
+ *                Permite detectar si el cache sigue válido sin re-evaluar.
+ */
+export type CacheEntry = {
+  value: unknown
+  /** dep key → epoch en el momento de la última evaluación de este thread */
+  depEpochs: Map<string, number>
+}
+
+/**
  * Store reactivo. Cada `<TelarRoot>` crea una instancia independiente.
  *
  * - `values`:    valores actuales de knots y binds
+ * - `epochs`:    número de versión por nodo; se incrementa en cada escritura
+ *                (knots/binds) o cuando un thread produce un valor diferente.
+ *                Permite a threads downstream detectar cambios sin re-evaluar.
  * - `graph`:     grafo de dependencias entre nodos
  * - `listeners`: callbacks de componentes React suscritos a cada nodo
- * - `cache`:     valores calculados de threads (invalidados al cambiar deps)
+ * - `cache`:     valores calculados de threads con sus depEpochs
+ * - `dirty`:     threads que necesitan re-evaluación en la próxima lectura.
+ *                Se llena en escritura (vía BFS) y se vacía en evaluación.
  */
 export type Store = {
   values: Map<string, unknown>
+  epochs: Map<string, number>
   graph: Graph
   /** node key → conjunto de callbacks de componentes suscritos */
   listeners: Map<string, Set<() => void>>
-  /** thread key → valor calculado cacheado */
-  cache: Map<string, unknown>
+  /** thread key → entrada del cache con valor y epochs de deps */
+  cache: Map<string, CacheEntry>
+  /** thread keys que necesitan re-evaluación */
+  dirty: Set<string>
 }

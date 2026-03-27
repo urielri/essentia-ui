@@ -6,12 +6,14 @@ import { getDirtyNodes, rebuildGraphEdges } from './graph'
 export function createStore(): Store {
   return {
     values: new Map(),
+    epochs: new Map(),
     graph: {
       nodeDeps: new Map(),
       nodeSubscriptions: new Map(),
     },
     listeners: new Map(),
     cache: new Map(),
+    dirty: new Set(),
   }
 }
 
@@ -29,14 +31,21 @@ export function getNodeValue<T>(node: AnyNode<T>, store: Store): T {
 
 /**
  * Evalúa un thread con tracking de dependencias.
- * Si el cache es válido (no fue invalidado), retorna el valor cacheado.
- * Si no, re-evalúa, reconstruye las aristas del grafo y cachea el resultado.
+ *
+ * Flujo:
+ * 1. Si el thread NO está en `store.dirty` y tiene entrada en cache → retorna cache.
+ * 2. Si está dirty → re-evalúa, captura depEpochs, aplica `equal`, limpia dirty.
+ * 3. Si el valor nuevo es igual al previo según `equal` → preserva referencia vieja.
+ * 4. Si el valor cambió → incrementa el epoch del thread para que deps downstream
+ *    detecten el cambio sin necesidad de re-evaluarse ellos mismos.
  */
 function evaluateThread<T>(node: ThreadDef<T>, store: Store): T {
-  if (store.cache.has(node.key)) {
-    return store.cache.get(node.key) as T
+  // Fast path: cache válido
+  if (!store.dirty.has(node.key) && store.cache.has(node.key)) {
+    return store.cache.get(node.key)!.value as T
   }
 
+  const prevEntry = store.cache.get(node.key)
   const discoveredDeps = new Set<string>()
 
   const trackingRead = <U>(dep: AnyNode<U>): U => {
@@ -44,12 +53,39 @@ function evaluateThread<T>(node: ThreadDef<T>, store: Store): T {
     return getNodeValue(dep, store)
   }
 
-  const value = node.get({ read: trackingRead })
+  const newValue = node.get({ read: trackingRead })
 
+  // Si `equal` retorna true, preservamos la referencia anterior.
+  // Esto garantiza que useSyncExternalStore reciba la misma referencia
+  // y no dispare un re-render innecesario.
+  const finalValue: T =
+    prevEntry !== undefined &&
+    node.equal !== undefined &&
+    node.equal(prevEntry.value as T, newValue)
+      ? (prevEntry.value as T)
+      : newValue
+
+  // Captura epochs de deps directas (solo knots/binds tienen epoch propio)
+  const depEpochs = new Map<string, number>()
+  for (const depKey of discoveredDeps) {
+    const epoch = store.epochs.get(depKey)
+    if (epoch !== undefined) {
+      depEpochs.set(depKey, epoch)
+    }
+  }
+
+  // Incrementa el epoch del thread solo si el valor cambió.
+  // Esto permite que threads downstream detecten que este thread no varió
+  // sin necesidad de re-evaluarlo.
+  if (prevEntry === undefined || !Object.is(prevEntry.value, finalValue)) {
+    store.epochs.set(node.key, (store.epochs.get(node.key) ?? 0) + 1)
+  }
+
+  store.dirty.delete(node.key)
   rebuildGraphEdges(store.graph, node.key, discoveredDeps)
-  store.cache.set(node.key, value)
+  store.cache.set(node.key, { value: finalValue, depEpochs })
 
-  return value
+  return finalValue
 }
 
 /**
@@ -99,21 +135,30 @@ export function setNodeValue<T>(
 
   store.values.set(key, newValue)
 
-  // Invalida el cache de todos los threads afectados (BFS)
-  const dirty = getDirtyNodes(key, store.graph)
-  for (const dirtyKey of dirty) {
-    store.cache.delete(dirtyKey)
+  // Incrementa el epoch del nodo escrito
+  store.epochs.set(key, (store.epochs.get(key) ?? 0) + 1)
+
+  // Marca como dirty todos los threads afectados (BFS).
+  // No borramos el cache — se preserva el valor previo para la comparación
+  // con `equal` durante la próxima evaluación.
+  const dirtyThreads = getDirtyNodes(key, store.graph)
+  for (const dirtyKey of dirtyThreads) {
+    store.dirty.add(dirtyKey)
   }
 
   // Notifica componentes suscritos al nodo cambiado y a los afectados
   notifyKey(key, store)
-  for (const dirtyKey of dirty) {
+  for (const dirtyKey of dirtyThreads) {
     notifyKey(dirtyKey, store)
   }
 }
 
 // ─── Subscribe ───────────────────────────────────────────────────────────────
 
+/**
+ * Suscribe un callback al nodo identificado por `key`.
+ * Retorna una función de cleanup que elimina el listener del store.
+ */
 export function subscribeToNode(
   key: string,
   listener: () => void,
