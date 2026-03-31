@@ -29,6 +29,15 @@ const DEMOS = [
   },
 ]
 
+const DOCS = [
+  {
+    href:  '/docs',
+    title: 'Documentación',
+    desc:  'Guías de implementación, referencia del core, deep dive técnico y diagramas del grafo de dependencias.',
+    tags:  ['CORE', 'API', 'Guías'],
+  },
+]
+
 export default function DashboardPage() {
   return (
     <div className="db-page">
@@ -43,6 +52,7 @@ export default function DashboardPage() {
       </header>
 
       <main className="db-main">
+        <p className="db-section-label">Demos</p>
         <div className="db-grid">
           {DEMOS.map(demo => (
             <Link key={demo.href} href={demo.href} className="db-card">
@@ -50,6 +60,21 @@ export default function DashboardPage() {
               <p className="db-card-desc">{demo.desc}</p>
               <div className="db-tags">
                 {demo.tags.map(tag => (
+                  <span key={tag} className="db-tag">{tag}</span>
+                ))}
+              </div>
+              <span className="db-card-arrow">→</span>
+            </Link>
+          ))}
+        </div>
+        <p className="db-section-label" style={{ marginTop: '2rem' }}>Referencias</p>
+        <div className="db-grid">
+          {DOCS.map(doc => (
+            <Link key={doc.href} href={doc.href} className="db-card">
+              <h2 className="db-card-title">{doc.title}</h2>
+              <p className="db-card-desc">{doc.desc}</p>
+              <div className="db-tags">
+                {doc.tags.map(tag => (
                   <span key={tag} className="db-tag">{tag}</span>
                 ))}
               </div>

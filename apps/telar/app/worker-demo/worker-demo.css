@@ -1,0 +1,224 @@
+.wd-page {
+  min-height: 100vh;
+  background: #0a0a0a;
+  color: #e5e5e5;
+  font-family: 'Geist Mono', 'Fira Code', monospace;
+  padding: 3rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+/* ─── Header ─────────────────────────────────────────────────── */
+
+.wd-header {
+  text-align: center;
+  max-width: 520px;
+}
+
+.wd-header h1 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #fff;
+  margin: 0 0 0.5rem;
+}
+
+.wd-header p {
+  font-size: 0.8rem;
+  color: #737373;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ─── Sections ───────────────────────────────────────────────── */
+
+.wd-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  max-width: 420px;
+}
+
+.wd-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.wd-label {
+  font-size: 0.7rem;
+  color: #525252;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.wd-hint {
+  font-size: 0.7rem;
+  color: #3f3f3f;
+  margin: 0;
+}
+
+/* ─── Theme swatch ───────────────────────────────────────────── */
+
+.wd-color-swatch {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08);
+}
+
+.wd-color-swatch:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.2);
+}
+
+.wd-color-swatch:active {
+  transform: scale(0.97);
+}
+
+/* ─── Note ───────────────────────────────────────────────────── */
+
+.wd-textarea {
+  background: #141414;
+  border: 1px solid #262626;
+  border-radius: 8px;
+  color: #e5e5e5;
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 0.75rem 1rem;
+  resize: vertical;
+  min-height: 96px;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.wd-textarea:focus {
+  border-color: #404040;
+}
+
+.wd-textarea::placeholder {
+  color: #3f3f3f;
+}
+
+/* ─── Counter ────────────────────────────────────────────────── */
+
+.wd-counter {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.wd-counter span {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #fff;
+  min-width: 3ch;
+  text-align: center;
+  letter-spacing: -0.04em;
+}
+
+.wd-counter button {
+  width: 36px;
+  height: 36px;
+  background: #1a1a1a;
+  border: 1px solid #262626;
+  border-radius: 8px;
+  color: #e5e5e5;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.wd-counter button:hover {
+  background: #242424;
+  border-color: #404040;
+}
+
+.wd-counter button:active {
+  background: #2a2a2a;
+}
+
+/* ─── Footer ─────────────────────────────────────────────────── */
+
+.wd-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 420px;
+  padding-top: 1.5rem;
+  border-top: 1px solid #1a1a1a;
+}
+
+.wd-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.wd-links a {
+  font-size: 0.8rem;
+  color: #525252;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.wd-links a:hover {
+  color: #a3a3a3;
+}
+
+/* ─── Status badge ───────────────────────────────────────────── */
+
+.wd-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  color: #525252;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid #1f1f1f;
+  border-radius: 4px;
+  background: #111;
+}
+
+.wd-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #262626;
+}
+
+.wd-status-dot.active {
+  background: #10b981;
+  box-shadow: 0 0 4px #10b981;
+}
+
+/* ─── Danger button ──────────────────────────────────────────── */
+
+.wd-btn-danger {
+  font-family: inherit;
+  font-size:   0.75rem;
+  color:       #f87171;
+  background:  #1a0f0f;
+  border:      1px solid #3f1515;
+  border-radius: 6px;
+  padding:     0.35rem 0.75rem;
+  cursor:      pointer;
+  transition:  background 0.1s, border-color 0.1s;
+}
+
+.wd-btn-danger:hover {
+  background:    #270f0f;
+  border-color:  #7f1d1d;
+}

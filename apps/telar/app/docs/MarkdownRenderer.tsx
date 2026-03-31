@@ -7,9 +7,7 @@ import './docs.css'
 export function MarkdownRenderer({ content }: { content: string }) {
   return (
     <div className="docs-content">
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-        {content}
-      </ReactMarkdown>
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
     </div>
   )
 }
