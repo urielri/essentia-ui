@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
 import { useKnot, useThread } from '@repo/telar/react'
+import { appThemeKnot } from '../../state/theme'
 import {
-  themeKnot, profileKnot, editingKnot, draftKnot, previewThread,
+  profileKnot, editingKnot, draftKnot, previewThread,
 } from '../../state/profile-demo'
 import type { ProfileDraft } from '../../state/profile-demo'
 import './profile-demo.css'
@@ -170,7 +170,7 @@ function ProfilePreview() {
 // ─── Theme Toggle ─────────────────────────────────────────────────────────────
 
 function ThemeToggle() {
-  const [theme, setTheme] = useKnot(themeKnot)
+  const [theme, setTheme] = useKnot(appThemeKnot)
   return (
     <div className="pd-theme-toggle">
       <div className="pd-theme-btns">
@@ -233,13 +233,7 @@ export function ProfileSkeleton() {
 // ─── Demo content ─────────────────────────────────────────────────────────────
 
 export function ProfileDemoContent() {
-  const [theme]   = useKnot(themeKnot)
   const [editing] = useKnot(editingKnot)
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-    return () => { document.documentElement.removeAttribute('data-theme') }
-  }, [theme])
 
   return (
     <div className="pd-page">

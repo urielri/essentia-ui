@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, type ReactNode } from 'react'
+import { useRef, useContext, type ReactNode } from 'react'
 import { TelarContext } from './context'
 import { createStore } from '../core/store'
 import type { Store } from '../core/types'
@@ -46,22 +46,31 @@ export function TelarRootProvider({
   initialValues,
   store: externalStore,
 }: TelarRootProviderProps) {
-  const storeRef = useRef<Store | null>(null)
+  const existingStore = useContext(TelarContext)
+  const storeRef      = useRef<Store | null>(null)
 
-  if (storeRef.current === null) {
+  if (storeRef.current === null && !existingStore) {
     storeRef.current = externalStore ?? createStore()
   }
 
+  const store = existingStore ?? storeRef.current!
+
   if (initialValues) {
     for (const [key, value] of Object.entries(initialValues)) {
-      if (!storeRef.current.values.has(key)) {
-        storeRef.current.values.set(key, value)
+      if (!store.values.has(key)) {
+        store.values.set(key, value)
       }
     }
   }
 
+  // Si ya existe un store en el árbol (e.g. root layout provee un store global),
+  // solo hidratar con initialValues y pasar children sin crear un nuevo contexto.
+  if (existingStore) {
+    return <>{children}</>
+  }
+
   return (
-    <TelarContext.Provider value={storeRef.current}>
+    <TelarContext.Provider value={store}>
       {children}
     </TelarContext.Provider>
   )

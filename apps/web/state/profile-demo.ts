@@ -3,8 +3,6 @@ import type { ServerKnotDef } from '@repo/telar/server'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type Theme = 'dark' | 'soft'
-
 export type Profile = {
   name:      string
   role:      string
@@ -23,17 +21,6 @@ export type ProfileDraft = {
 }
 
 // ─── Nodes ────────────────────────────────────────────────────────────────────
-
-/**
- * Tema de la UI.
- * uiCache: true → se hidrata desde sessionStorage antes del primer render.
- * Al recargar la página no hay flash: el tema correcto aplica de entrada.
- */
-export const themeKnot = knot<Theme>({
-  key:     'pd-theme',
-  default: 'dark',
-  uiCache: true,
-})
 
 const DEFAULT_PROFILE: Profile = {
   name:      'Nombre',

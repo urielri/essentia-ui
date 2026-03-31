@@ -1,60 +1,63 @@
-import { Button, Label, Layout } from "@repo/ui";
-import Image from "next/image";
+import Link from 'next/link'
+import { ThemeToggle } from './ThemeToggle'
+import './dashboard.css'
 
-async function hello() {
-  let t = "";
-  await setTimeout(() => {
-    t = "Hola";
-  }, 1000);
-  return t;
-}
+const DEMOS = [
+  {
+    href:  '/profile-demo',
+    title: 'Profile + Preview',
+    desc:  'SSR prefetch con React Server Components, Suspense streaming y skeleton. Theme persistido en sessionStorage.',
+    tags:  ['RSC', 'Suspense', 'uiCache'],
+  },
+  {
+    href:  '/worker-demo',
+    title: 'Worker + IndexedDB',
+    desc:  'Persistencia MPA con Dedicated Worker. Cifrado AES-256-GCM. Estado que sobrevive recargas y navegación.',
+    tags:  ['Worker', 'IndexedDB', 'AES-GCM'],
+  },
+  {
+    href:  '/todo',
+    title: 'Todo List',
+    desc:  'Gestión de lista con knots, threads derivados y bind con reducers tipados.',
+    tags:  ['knot', 'thread', 'bind'],
+  },
+  {
+    href:  '/squares',
+    title: 'Squares',
+    desc:  'Estado reactivo compartido entre múltiples componentes sin prop drilling.',
+    tags:  ['reactive', 'shared state'],
+  },
+]
 
-export default async function Home() {
-  const h = await hello();
+export default function DashboardPage() {
   return (
-    <Layout.Root style={{ gridTemplateRows: "80px  1fr 1fr 80px" }}>
-      <Layout.Header></Layout.Header>
-      <Layout.FullWidth>
-        <div
-          className="full-width"
-          style={{
-            backgroundColor: "aliceblue",
-            height: 900,
-            width: "100%",
-            position: "absolute",
-            top: 0,
-            left: 0,
-          }}
-        >
-          <Image src="/hero.jpg" alt="Logo" fill objectFit="cover" />
+    <div className="db-page">
+      <header className="db-header">
+        <div className="db-header-inner">
+          <div>
+            <h1 className="db-logo">Telar</h1>
+            <p className="db-tagline">Estado reactivo para React</p>
+          </div>
+          <ThemeToggle />
         </div>
-        <div style={{ backgroundColor: "gainsboro", height: 20 }}></div>
-      </Layout.FullWidth>
-      <div
-        className="breakout"
-        style={{ background: "yellow", height: "1000px" }}
-      >
-        <div style={{ backgroundColor: "green" }}>
-          <Button>Button</Button>
-          <Button>Button</Button>
-          <Button>Button</Button>
-          <Button>Button</Button>
-          <Label.Title>GHOasdf</Label.Title>
+      </header>
+
+      <main className="db-main">
+        <div className="db-grid">
+          {DEMOS.map(demo => (
+            <Link key={demo.href} href={demo.href} className="db-card">
+              <h2 className="db-card-title">{demo.title}</h2>
+              <p className="db-card-desc">{demo.desc}</p>
+              <div className="db-tags">
+                {demo.tags.map(tag => (
+                  <span key={tag} className="db-tag">{tag}</span>
+                ))}
+              </div>
+              <span className="db-card-arrow">→</span>
+            </Link>
+          ))}
         </div>
-        <div
-          className="content-grid"
-          style={{ backgroundColor: "antiquewhite" }}
-        >
-          <Button>Button</Button>
-        </div>
-      </div>
-      <div style={{ backgroundColor: "red" }}></div>
-      <Layout.FullWidth>
-        <div style={{ backgroundColor: "aliceblue", height: 80 }}>
-          full
-          <h1>{process.env.PACKAGE_ENV}</h1>
-        </div>
-      </Layout.FullWidth>
-    </Layout.Root>
-  );
+      </main>
+    </div>
+  )
 }

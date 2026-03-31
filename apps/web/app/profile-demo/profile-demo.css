@@ -1,48 +1,9 @@
-/* ─── Variables ──────────────────────────────────────────────────────────────
-   :root define el tema dark como base — disponible para el skeleton y cualquier
-   elemento fuera de .pd-page.
-   .pd-page hereda y puede sobreescribir via data-theme.
-   ─────────────────────────────────────────────────────────────────────────── */
-
-:root {
-  --bg:         #0a0a0a;
-  --surface:    #111111;
-  --surface-2:  #181818;
-  --border:     #222222;
-  --border-2:   #2e2e2e;
-  --text:       #e5e5e5;
-  --text-2:     #a3a3a3;
-  --text-3:     #525252;
-  --accent:     #6366f1;
-  --accent-bg:  rgba(99, 102, 241, 0.1);
-  --accent-dim: rgba(99, 102, 241, 0.25);
-  --radius:     10px;
-  --radius-sm:  6px;
-  --shadow:     0 1px 4px rgba(0, 0, 0, 0.5);
-}
-
 .pd-page {
-
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
   font-family: 'Geist Mono', 'Fira Code', monospace;
   transition: background 0.2s ease, color 0.2s ease;
-}
-
-:root[data-theme='soft'] {
-  --bg:         #f0ebe4;
-  --surface:    #faf6f1;
-  --surface-2:  #f0e9e0;
-  --border:     #ddd3c8;
-  --border-2:   #cfc5b8;
-  --text:       #2c2218;
-  --text-2:     #7c6b5e;
-  --text-3:     #b8a99c;
-  --accent:     #b56840;
-  --accent-bg:  rgba(181, 104, 64, 0.1);
-  --accent-dim: rgba(181, 104, 64, 0.25);
-  --shadow:     0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 /* ─── Layout ─────────────────────────────────────────────────────────────────*/

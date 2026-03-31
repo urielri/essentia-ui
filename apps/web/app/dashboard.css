@@ -1,0 +1,118 @@
+.db-page {
+  min-height: 100vh;
+}
+
+.db-header {
+  border-bottom: 1px solid var(--border);
+  background:    var(--surface);
+}
+
+.db-header-inner {
+  max-width:      900px;
+  margin:         0 auto;
+  padding:        1.25rem 1.5rem;
+  display:        flex;
+  align-items:    center;
+  justify-content: space-between;
+}
+
+.db-logo {
+  font-size:   1.25rem;
+  font-weight: 600;
+  color:       var(--text);
+  letter-spacing: -0.02em;
+}
+
+.db-tagline {
+  font-size: 0.75rem;
+  color:     var(--text-3);
+  margin-top: 0.125rem;
+}
+
+.db-main {
+  max-width: 900px;
+  margin:    0 auto;
+  padding:   2.5rem 1.5rem;
+}
+
+.db-grid {
+  display:               grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap:                   1rem;
+}
+
+.db-card {
+  display:        flex;
+  flex-direction: column;
+  gap:            0.625rem;
+  padding:        1.5rem;
+  background:     var(--surface);
+  border:         1px solid var(--border);
+  border-radius:  var(--radius);
+  cursor:         pointer;
+  position:       relative;
+  transition:     border-color 0.15s, background 0.15s;
+}
+
+.db-card:hover {
+  border-color: var(--border-2);
+  background:   var(--surface-2);
+}
+
+.db-card-title {
+  font-size:   1rem;
+  font-weight: 600;
+  color:       var(--text);
+}
+
+.db-card-desc {
+  font-size:   0.8125rem;
+  color:       var(--text-2);
+  line-height: 1.6;
+  flex:        1;
+}
+
+.db-tags {
+  display: flex;
+  gap:     0.375rem;
+  flex-wrap: wrap;
+}
+
+.db-tag {
+  font-size:     0.6875rem;
+  padding:       0.2rem 0.5rem;
+  background:    var(--accent-bg);
+  color:         var(--accent);
+  border-radius: 999px;
+  border:        1px solid var(--accent-dim);
+}
+
+.db-card-arrow {
+  position:   absolute;
+  top:        1.5rem;
+  right:      1.5rem;
+  color:      var(--text-3);
+  font-size:  1rem;
+  transition: transform 0.15s, color 0.15s;
+}
+
+.db-card:hover .db-card-arrow {
+  color:     var(--accent);
+  transform: translateX(3px);
+}
+
+.db-theme-toggle {
+  background:    none;
+  border:        1px solid var(--border-2);
+  border-radius: var(--radius-sm);
+  color:         var(--text-2);
+  cursor:        pointer;
+  font-size:     1rem;
+  padding:       0.375rem 0.75rem;
+  transition:    border-color 0.15s, color 0.15s;
+}
+
+.db-theme-toggle:hover {
+  border-color: var(--accent);
+  color:        var(--accent);
+}
