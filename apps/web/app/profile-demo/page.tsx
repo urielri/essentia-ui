@@ -1,7 +1,8 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { TelarRoot } from '@repo/telar/react-server'
-import { profileKnot } from '../../state/profile-demo'
+import { TelarPersistence } from '@repo/telar/react'
+import { profileKnot, themeKnot } from '../../state/profile-demo'
 import { ProfileDemoContent, ProfileSkeleton } from './ProfileDemoApp'
 
 export const metadata: Metadata = {
@@ -19,7 +20,9 @@ export default async function ProfileDemoPage() {
   return (
     <Suspense fallback={<ProfileSkeleton />}>
       <TelarRoot prefetchNodes={[profileKnot]}>
-        <ProfileDemoContent />
+        <TelarPersistence persistedNodes={[themeKnot]}>
+          <ProfileDemoContent />
+        </TelarPersistence>
       </TelarRoot>
     </Suspense>
   )

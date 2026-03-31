@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useLayoutEffect } from 'react'
 import { useKnot, useThread } from '@repo/telar/react'
 import {
   themeKnot, profileKnot, editingKnot, draftKnot, previewThread,
@@ -236,7 +236,7 @@ export function ProfileDemoContent() {
   const [theme]   = useKnot(themeKnot)
   const [editing] = useKnot(editingKnot)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     return () => { document.documentElement.removeAttribute('data-theme') }
   }, [theme])

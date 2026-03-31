@@ -32,6 +32,7 @@ export type ProfileDraft = {
 export const themeKnot = knot<Theme>({
   key:     'pd-theme',
   default: 'dark',
+  uiCache: true,
 })
 
 const DEFAULT_PROFILE: Profile = {
