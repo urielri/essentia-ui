@@ -26,10 +26,11 @@ import type { KnotDef } from './types'
  * setFilter('active')
  * setFilter(prev => prev === 'all' ? 'active' : prev)
  */
-export function knot<T>(options: { key: string; default: T }): KnotDef<T> {
+export function knot<T>(options: { key: string; default: T; uiCache?: boolean }): KnotDef<T> {
   return {
     _brand: 'knot',
-    key: options.key,
+    key:     options.key,
     default: options.default,
+    ...(options.uiCache !== undefined && { uiCache: options.uiCache }),
   }
 }

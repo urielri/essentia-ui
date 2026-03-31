@@ -18,6 +18,7 @@ Esta guía cubre todo lo que necesitás saber para integrar Telar en una aplicac
 10. [SSR — getServerSideProps](#10-ssr--getserversideprops)
 11. [Stores múltiples e isolación](#11-stores-múltiples-e-isolación)
 12. [Errores comunes](#12-errores-comunes)
+13. [Persistencia MPA con Worker](#13-persistencia-mpa-con-worker)
 
 ---
 
@@ -34,6 +35,8 @@ import { knot, thread, bind }             from '@repo/telar'
 import { TelarRoot, useKnot, useThread,
          useBind, useDispatch, useTelar } from '@repo/telar/react'
 import { createPrefetchContext }          from '@repo/telar/server'
+import { createTelarWorker,
+         invalidatePersistedStore }       from '@repo/telar/worker'
 ```
 
 **Envolver la app con `<TelarRoot>`:**
@@ -133,6 +136,20 @@ setFilter('active')             // valor directo
 setFilter(f => f === 'all' ? 'active' : 'all')  // función actualizadora
 ```
 
+**`uiCache` — hidratación síncrona sin flash:**
+
+```typescript
+// TelarRoot lee este valor desde sessionStorage antes del primer render.
+// El usuario nunca ve el default 'dark' si ya eligió 'soft'.
+const themeKnot = knot({
+  key:     'theme',
+  default: 'dark',
+  uiCache: true,
+})
+```
+
+Solo para estado de UI no sensible (temas, idioma, paneles). Los valores en `sessionStorage` son texto plano — ver sección 13.
+
 **Cuándo usar `knot`:**
 - Estado simple sin lógica de transición
 - Valores primitivos o pequeños objetos que cambian libremente
@@ -195,11 +212,49 @@ const statsThread = thread({
 })
 ```
 
+**`gate` — evaluación condicional:**
+
+Si se provee `gate`, se evalúa antes que `get`. Si retorna `false`, la re-evaluación se cancela y el thread congela su último valor cacheado. Solo las dependencias del `gate` quedan activas en el grafo — cambios en los nodos leídos por `get` son ignorados mientras el gate esté cerrado.
+
+```typescript
+// El thread solo se evalúa cuando el usuario está online.
+// Con gate = false: cartKnot y ratesKnot no son dependencias activas.
+const pricesThread = thread({
+  key:     'prices',
+  default: [],
+  gate:    ({ read }) => read(onlineKnot),
+  get:     ({ read }) => computePrices(read(cartKnot), read(ratesKnot)),
+})
+
+// Congelar el resumen mientras se procesa el pago
+const summaryThread = thread({
+  key:     'order-summary',
+  default: null,
+  gate:    ({ read }) => !read(processingKnot),
+  get:     ({ read }) => buildSummary(read(itemsKnot), read(promoKnot)),
+})
+
+// Solo calcular si el usuario tiene permisos
+const analyticsThread = thread({
+  key:     'analytics',
+  default: [],
+  gate:    ({ read }) => read(userKnot).role === 'admin',
+  get:     ({ read }) => aggregate(read(eventsKnot)),
+})
+```
+
+`default` es el valor retornado cuando `gate` bloquea la primera evaluación (sin cache previo). Si no se provee `default` y el gate bloquea desde el inicio, el thread retorna `undefined`.
+
 **Cuándo usar `thread`:**
 - Valores calculados a partir de otros nodos
 - Listas filtradas, ordenadas o agrupadas
 - Totales, conteos, promedios
 - Cualquier valor que podría expresarse como `useMemo` compartido entre componentes
+
+**Cuándo agregar `gate`:**
+- El resultado anterior sigue siendo válido bajo cierta condición (offline, procesando, sin permisos)
+- El cómputo es costoso y no tiene sentido ejecutarlo fuera de un contexto específico
+- Querés congelar la UI durante una transacción
 
 ---
 
@@ -232,6 +287,21 @@ dispatch.clear()
 // Solo escritura (sin suscripción — no re-renderiza al cambiar el estado)
 const dispatch = useDispatch(todosBind)
 dispatch.remove('1')
+```
+
+**`uiCache` en bind:**
+
+```typescript
+// bind también acepta uiCache — útil si el estado de UI tiene transiciones definidas
+const sidebarBind = bind({
+  key:     'sidebar',
+  default: { open: false, width: 280 },
+  uiCache: true,
+  reducers: {
+    toggle: (state) => ({ ...state, open: !state.open }),
+    resize: (state, width: number) => ({ ...state, width }),
+  },
+})
 ```
 
 **Cuándo usar `bind`:**
@@ -581,7 +651,8 @@ Server Component
 
 Client Component (DashboardClient)
   └─ <TelarRoot initialValues={{ 'user': { id: 1, name: 'Ana' } }}>
-  └─ TelarRoot precarga store.values antes del primer render
+  └─ TelarRoot carga initialValues en store.values en cada render (guard !has)
+  └─ getServerSnapshot usa getNodeValue → server HTML ya incluye los datos reales
   └─ UserGreeting lee user → ya tiene el valor → sin loading state
 ```
 
@@ -768,3 +839,272 @@ export async function getServerSideProps(ctx) {
   return { props: { initialValues: prefetch.flush() } }
 }
 ```
+
+---
+
+## 13. Persistencia MPA con Worker
+
+En aplicaciones MPA (Multi-Page Application) o SPAs con recargas de página, el store de Telar se destruye en cada navegación porque vive en memoria. Para preservar el estado entre páginas, Telar incluye una capa de persistencia basada en **Dedicated Worker + IndexedDB**.
+
+### Qué resuelve
+
+| Escenario | Sin Worker | `session` (default) | `permanent` |
+|---|---|---|---|
+| Navegar entre páginas (MPA) | Estado perdido | Estado restaurado | Estado restaurado |
+| Recargar la página | Estado perdido | Estado restaurado | Estado restaurado |
+| Cerrar y reabrir el browser | Estado perdido | Defaults (limpio) | Estado restaurado |
+| Dos tabs distintos | — | Cada tab aislado | Cada tab aislado |
+
+### Modos de persistencia
+
+`TelarRoot` acepta la prop `persistence` que controla el ciclo de vida de los datos:
+
+| Modo | Sobrevive recarga | Sobrevive navegación MPA | Sobrevive cierre del tab/navegador |
+|------|:-----------------:|:------------------------:|:----------------------------------:|
+| `'session'` (default) | ✓ | ✓ | ✗ |
+| `'permanent'` | ✓ | ✓ | ✓ |
+
+**`'session'`** es el default. Usa un identificador de sesión en `sessionStorage` (`telar-session-id`). El Worker tagea cada entrada en IDB con ese ID y solo devuelve entradas que lo matcheen. Al cerrar el tab o el navegador, `sessionStorage` se limpia — la próxima visita genera un nuevo ID y las entradas anteriores se descartan y borran automáticamente.
+
+**`'permanent'`** usa IndexedDB directamente sin filtro de sesión. Los datos sobreviven cierres del navegador.
+
+### Setup básico
+
+Crear el Worker **fuera del componente** (a nivel de módulo o punto de entrada):
+
+```typescript
+// main.tsx o App.tsx
+import { createTelarWorker } from '@repo/telar/worker'
+import { TelarRoot }         from '@repo/telar/react'
+
+const worker = createTelarWorker()  // una sola vez, fuera del componente
+
+function App() {
+  return (
+    <TelarRoot worker={worker}>
+      <Router />
+    </TelarRoot>
+  )
+}
+```
+
+Todos los hooks (`useKnot`, `useBind`, `useThread`, etc.) funcionan exactamente igual. No hay cambios en los componentes.
+
+### Setup con seguridad completa
+
+Para activar las cuatro capas de defensa del Worker, pasar `persistedNodes` y `nodeConstraints`:
+
+```typescript
+import { createTelarWorker, invalidatePersistedStore } from '@repo/telar/worker'
+import { TelarRoot }                           from '@repo/telar/react'
+import { themeKnot, noteKnot, counterBind }    from './state'
+
+const THEMES = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6']
+
+const worker = createTelarWorker()
+
+function App() {
+  return (
+    <TelarRoot
+      worker={worker}
+      storeVersion="1"
+      persistence="session"
+      persistedNodes={[themeKnot, noteKnot, counterBind]}
+      nodeConstraints={{
+        'theme':   { allowedValues: THEMES },
+        'note':    { maxLength: 10_000 },
+        'counter': { min: 0, max: 9_999 },
+      }}
+    >
+      <Router />
+    </TelarRoot>
+  )
+}
+```
+
+**`persistedNodes`** — lista blanca de knots y binds a persistir. El Worker rechaza cualquier key fuera de esta lista al leer de IndexedDB.
+
+**`nodeConstraints`** — restricciones de valor por key, aplicadas después de la validación de tipo:
+
+| Constraint | Aplica a | Descripción |
+|---|---|---|
+| `maxLength` | string, array | Longitud máxima en chars / elementos |
+| `min` | number | Valor mínimo (inclusive) |
+| `max` | number | Valor máximo (inclusive) |
+| `allowedValues` | cualquier tipo | Enum exacto — el valor debe estar en la lista |
+
+### Qué se persiste y qué no
+
+Solo se persisten los **valores de knots y binds** — los nodos escritos por el usuario. Los threads no se persisten porque son valores derivados: se recalculan automáticamente desde las deps al montar.
+
+```typescript
+// ✅ Se persiste — es un knot/bind
+const themeKnot = knot({ key: 'theme', default: 'dark' })
+const cartBind  = bind({ key: 'cart', default: [], reducers: { ... } })
+
+// ✗ No se persiste — es un thread (derivado, se recalcula)
+const cartTotalThread = thread({ key: 'cartTotal', get: ({ read }) => ... })
+```
+
+### Comportamiento en la primera carga
+
+```
+1. React monta → TelarRoot conecta al Worker
+2. TelarRoot envía 'init' al Worker (nodes, persistence, sessionId?, version?)
+3. TelarRoot envía 'get-snapshot' al Worker
+4. Worker filtra IDB según el modo de persistencia:
+   - session: descarta entradas con sessionId distinto + las borra (limpieza)
+   - permanent: devuelve todas las entradas válidas
+5. Worker responde con snapshot (descifrado, validado por tipo y constraints)
+6. hydrateStore(snapshot, store) → componentes se actualizan con los valores guardados
+
+Si IndexedDB está vacía o no hay entradas para esta sesión (primera visita):
+→ snapshot = {} → store conserva los defaults definidos en cada nodo
+```
+
+La UI se renderiza primero con los defaults y luego recibe el snapshot. Si el snapshot no tarda (IndexedDB es local, suele ser < 5ms), el usuario no percibe el flash. Para eliminar el flash en nodos de UI, usar `uiCache: true` (ver sección siguiente).
+
+### Hidratación sin flash: `uiCache`
+
+Para nodos de estado de UI (temas, idioma, estado de paneles), el flag `uiCache: true` elimina el flash de defaults leyendo el valor desde `sessionStorage` síncronamente antes del primer render — sin esperar al Worker ni a IndexedDB.
+
+```typescript
+const themeKnot = knot({
+  key:     'theme',
+  default: 'dark',
+  uiCache: true,    // ← hidratación síncrona en el primer render
+})
+```
+
+`TelarRoot` lee automáticamente los nodos con `uiCache: true` desde `sessionStorage` y los pasa como `initialValues`. El Worker sigue siendo la fuente autoritativa — cuando llega el snapshot, `sessionStorage` se sincroniza con los valores del Worker.
+
+**Cuándo usar `uiCache: true`:**
+- Tema de color, modo oscuro/claro
+- Idioma o localización
+- Estado de sidebars, paneles colapsados
+- Cualquier preferencia visual sin consecuencias de negocio
+
+**Cuándo NO usar `uiCache`:**
+- Cantidades, precios, contadores con lógica de negocio
+- Datos de sesión de usuario
+- Cualquier valor donde la manipulación desde DevTools tenga consecuencias
+- **Páginas con SSR:** `sessionStorage` no existe en el servidor. `uiCache` solo elimina el flash en navegación MPA client-side; no puede evitar el flash del ciclo SSR → hidratación. Para ese caso, la única solución es un `<script>` inline en `<head>` que aplique el valor antes de que el HTML se pinte.
+
+**Por qué no es para datos sensibles:**
+
+Los valores en `sessionStorage` son texto plano. No están cifrados. Cualquier código JS en el mismo origen puede leerlos y modificarlos. Un valor manipulado en `sessionStorage` pasará al store en el primer render — no hay forma de distinguirlo de un valor legítimo. La única defensa es no guardar ahí datos que importe que sean íntegros.
+
+### Sincronización de `uiCache` con invalidación
+
+Cuando se invalida el store, limpiar también las entradas de `sessionStorage`:
+
+```typescript
+import { invalidatePersistedStore } from '@repo/telar/worker'
+
+// Borrar IDB + uiCache de sessionStorage
+invalidatePersistedStore(worker, undefined, [themeKnot, noteKnot])
+
+// Borrar solo entradas específicas
+invalidatePersistedStore(worker, ['cart'], [cartBind])
+```
+
+### Aislamiento entre tabs
+
+Cada tab que crea un `createTelarWorker()` obtiene su propio Dedicated Worker con su propia instancia de IndexedDB. Dos tabs de la misma app no comparten estado:
+
+```
+Tab A → Worker A → IndexedDB (telar-store, tab A)
+Tab B → Worker B → IndexedDB (telar-store, tab B)
+```
+
+Esto es diferente de un SharedWorker, donde todos los tabs compartirían el mismo store.
+
+### Seguridad: qué garantiza el Worker
+
+El Worker aplica cuatro capas de defensa al leer de IndexedDB:
+
+| Capa | Mecanismo | Amenaza mitigada |
+|------|-----------|-----------------|
+| 1 — Sanitización | Whitelist de keys, rechazo de keys peligrosas, límites de tamaño | Prototype pollution, DoS por almacenamiento |
+| 2 — AES-GCM | Cifrado + authentication tag por valor | Lectura offline, tampering del blob |
+| 3 — Tipo | Verifica typeof contra el default del nodo | Valores con tipo incorrecto inyectados |
+| 3b — Constraints | `allowedValues`, `min/max`, `maxLength` | XSS que cifra valores válidos pero fuera del dominio |
+
+**Importante:** las capas 1–3b no protegen contra XSS con ejecución JS en el mismo origen — un atacante con acceso al contexto puede usar la `CryptoKey` para cifrar datos válidos. La defensa primaria contra XSS sigue siendo una Content Security Policy (CSP) estricta a nivel de app.
+
+### Comportamiento ante modificación o borrado en IndexedDB
+
+| Acción desde DevTools | Resultado |
+|---|---|
+| Modificar el ciphertext | AES-GCM falla → entrada descartada → default |
+| Modificar el IV | AES-GCM falla → entrada descartada → default |
+| Modificar el `sessionId` de una entrada | Entrada tratada como huérfana → descartada y borrada → default |
+| Borrar una entrada | Nodo usa su default; se re-persiste al próximo write |
+| Borrar `telar-store` | Todos los nodos usan defaults; nueva sesión limpia |
+| Borrar `telar-keystore` | Nueva clave generada; datos viejos irrecuperables (key anterior perdida) |
+| Forjar ciphertext sin la CryptoKey | Imposible — AES-GCM rechaza |
+
+### Invalidación voluntaria del store
+
+Para resetear el estado (logout, cambio de usuario, reset de la app) sin recargar la página:
+
+```typescript
+import { invalidatePersistedStore } from '@repo/telar/worker'
+
+// Borrar todo lo persistido (IDB)
+invalidatePersistedStore(worker)
+
+// Borrar solo entradas específicas de IDB
+invalidatePersistedStore(worker, ['cart', 'session'])
+
+// Borrar IDB + uiCache de sessionStorage
+invalidatePersistedStore(worker, undefined, [themeKnot, sidebarBind])
+
+// Borrar entradas específicas de IDB + uiCache
+invalidatePersistedStore(worker, ['cart'], [themeKnot])
+```
+
+`invalidatePersistedStore` envía un mensaje `clear` al Worker (limpia IDB) y, si se pasan `uiCacheNodes`, elimina también las entradas correspondientes de `sessionStorage`. El store en memoria del main thread no se toca — los componentes muestran sus valores actuales hasta que la app recargue o los nodos se reseteen manualmente.
+
+**Cuándo usarlo:**
+- **Logout** — borrar datos del usuario de IDB antes de redirect
+- **Reset de sesión** — limpiar entradas específicas (carrito, preferencias)
+- **Cambio de usuario** — garantizar que el próximo usuario no vea datos del anterior
+
+### Invalidación automática por versión de esquema
+
+Cuando los nodos persistidos cambian (nuevas keys, cambios de tipo, estructura diferente), incrementar `storeVersion` en `TelarRoot` para limpiar IDB automáticamente en la próxima carga:
+
+```tsx
+<TelarRoot
+  worker={worker}
+  storeVersion="2"           // ← incrementar cuando cambia el esquema
+  persistedNodes={[...]}
+>
+```
+
+El Worker compara la versión recibida con la almacenada en IDB. Si difieren, limpia toda la base de datos antes de responder el snapshot — evitando que datos con esquemas viejos contaminen la nueva versión.
+
+### Limpiar el estado persistido (bajo nivel)
+
+Como alternativa de bajo nivel, se puede borrar la IDB directamente:
+
+```typescript
+// Borra los valores — la CryptoKey se preserva
+indexedDB.deleteDatabase('telar-store')
+
+// Borra todo, incluyendo la clave — los datos cifrados existentes
+// quedan irrecuperables (nueva clave en la próxima visita)
+indexedDB.deleteDatabase('telar-store')
+indexedDB.deleteDatabase('telar-keystore')
+```
+
+Preferir `invalidatePersistedStore` sobre este enfoque: usa el protocolo del Worker, funciona en cualquier contexto y no requiere acceso directo a `indexedDB`.
+
+### Requisitos del bundler
+
+`createTelarWorker()` usa el patrón `new URL('./store.worker.ts', import.meta.url)` que requiere soporte del bundler para Worker chunks. Es compatible con:
+
+- **Vite** — soporte nativo desde v2
+- **webpack 5** — soporte nativo con `asset/resource`
+- **esbuild** — soporte nativo

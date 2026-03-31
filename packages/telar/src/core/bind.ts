@@ -44,11 +44,13 @@ export function bind<T, R extends Reducers<T>>(options: {
   key: string
   default: T
   reducers: R
+  uiCache?: boolean
 }): BindDef<T, R> {
   return {
     _brand: 'bind',
-    key: options.key,
-    default: options.default,
+    key:      options.key,
+    default:  options.default,
     reducers: options.reducers,
+    ...(options.uiCache !== undefined && { uiCache: options.uiCache }),
   }
 }

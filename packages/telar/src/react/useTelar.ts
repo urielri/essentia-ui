@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useSyncExternalStore } from 'react'
 import { useTelarStore } from './context'
-import { getNodeValue, setNodeValue, subscribeToNode, getDefaultValue } from '../core/store'
+import { getNodeValue, setNodeValue, subscribeToNode } from '../core/store'
 import type {
   KnotDef,
   ThreadDef,
@@ -47,7 +47,7 @@ export function useTelar<T>(def: AnyNode<T>): any {
   const value = useSyncExternalStore(
     (notify) => subscribeToNode(def.key, notify, store),
     () => getNodeValue(def, store),
-    () => getDefaultValue(def),
+    () => getNodeValue(def, store),
   )
 
   const defaultValue = def._brand !== 'thread' ? def.default : (undefined as T)

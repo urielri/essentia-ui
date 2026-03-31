@@ -46,14 +46,32 @@ import type { ThreadDef, ReadContext } from './types'
  * const filtered = useThread(filteredTodosThread)
  */
 export function thread<T>(options: {
-  key: string
-  get: (ctx: ReadContext) => T
-  equal?: (a: T, b: T) => boolean
+  key:     string
+  get:     (ctx: ReadContext) => T
+  equal?:  (a: T, b: T) => boolean
+  /**
+   * Condición de apertura. Si retorna `false`, la re-evaluación se cancela
+   * y el thread congela su último valor cacheado. Solo las dependencias
+   * del gate se mantienen activas mientras esté cerrado.
+   *
+   * @example
+   * const result = thread({
+   *   key:     'result',
+   *   default: 0,
+   *   gate:    ({ read }) => read(enabledKnot),
+   *   get:     ({ read }) => heavyCompute(read(aKnot), read(bKnot)),
+   * })
+   */
+  gate?:    (ctx: ReadContext) => boolean
+  /** Valor inicial cuando gate bloquea la primera evaluación (sin cache). */
+  default?: T
 }): ThreadDef<T> {
   return {
-    _brand: 'thread',
-    key: options.key,
-    get: options.get,
-    equal: options.equal,
+    _brand:  'thread',
+    key:     options.key,
+    get:     options.get,
+    ...(options.equal   !== undefined && { equal:   options.equal }),
+    ...(options.gate    !== undefined && { gate:    options.gate }),
+    ...(options.default !== undefined && { default: options.default }),
   }
 }

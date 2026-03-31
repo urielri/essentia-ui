@@ -32,12 +32,20 @@ export function getNodeValue<T>(node: AnyNode<T>, store: Store): T {
 /**
  * Evalúa un thread con tracking de dependencias.
  *
- * Flujo:
- * 1. Si el thread NO está en `store.dirty` y tiene entrada en cache → retorna cache.
+ * Flujo sin gate:
+ * 1. Si el thread NO está en `store.dirty` y tiene cache → retorna cache.
  * 2. Si está dirty → re-evalúa, captura depEpochs, aplica `equal`, limpia dirty.
  * 3. Si el valor nuevo es igual al previo según `equal` → preserva referencia vieja.
  * 4. Si el valor cambió → incrementa el epoch del thread para que deps downstream
  *    detecten el cambio sin necesidad de re-evaluarse ellos mismos.
+ *
+ * Flujo con gate:
+ * 1. Evalúa `gate` con tracking → registra deps del gate en discoveredDeps.
+ * 2. Si gate retorna false → congela el valor cacheado (o `node.default` si no
+ *    hay cache). Solo las deps del gate quedan activas en el grafo — cambios en
+ *    los nodos de `get` son ignorados hasta que el gate se abra.
+ * 3. Si gate retorna true → evalúa `get` normalmente acumulando sus deps
+ *    junto a las del gate.
  */
 function evaluateThread<T>(node: ThreadDef<T>, store: Store): T {
   // Fast path: cache válido
@@ -45,13 +53,41 @@ function evaluateThread<T>(node: ThreadDef<T>, store: Store): T {
     return store.cache.get(node.key)!.value as T
   }
 
-  const prevEntry = store.cache.get(node.key)
+  const prevEntry      = store.cache.get(node.key)
   const discoveredDeps = new Set<string>()
 
   const trackingRead = <U>(dep: AnyNode<U>): U => {
     discoveredDeps.add(dep.key)
     return getNodeValue(dep, store)
   }
+
+  // ── gate ────────────────────────────────────────────────────────────────────
+  if (node.gate !== undefined) {
+    const open = node.gate({ read: trackingRead })  // acumula deps del gate
+
+    if (!open) {
+      // Gate cerrado: congelar valor previo sin re-evaluar get.
+      // discoveredDeps solo tiene deps del gate → el grafo las preserva,
+      // ignorando las deps de get hasta que el gate se abra.
+      const frozenValue = prevEntry !== undefined
+        ? (prevEntry.value as T)
+        : (node.default as T)
+
+      const depEpochs = new Map<string, number>()
+      for (const depKey of discoveredDeps) {
+        const epoch = store.epochs.get(depKey)
+        if (epoch !== undefined) depEpochs.set(depKey, epoch)
+      }
+
+      store.dirty.delete(node.key)
+      rebuildGraphEdges(store.graph, node.key, discoveredDeps)
+      store.cache.set(node.key, { value: frozenValue, depEpochs })
+      return frozenValue
+    }
+    // Gate abierto: discoveredDeps ya tiene las deps del gate.
+    // get acumulará las suyas vía el mismo trackingRead.
+  }
+  // ────────────────────────────────────────────────────────────────────────────
 
   const newValue = node.get({ read: trackingRead })
 
@@ -69,9 +105,7 @@ function evaluateThread<T>(node: ThreadDef<T>, store: Store): T {
   const depEpochs = new Map<string, number>()
   for (const depKey of discoveredDeps) {
     const epoch = store.epochs.get(depKey)
-    if (epoch !== undefined) {
-      depEpochs.set(depKey, epoch)
-    }
+    if (epoch !== undefined) depEpochs.set(depKey, epoch)
   }
 
   // Incrementa el epoch del thread solo si el valor cambió.
@@ -134,6 +168,7 @@ export function setNodeValue<T>(
   if (Object.is(current, newValue)) return
 
   store.values.set(key, newValue)
+  store.onWrite?.(key, newValue)
 
   // Incrementa el epoch del nodo escrito
   store.epochs.set(key, (store.epochs.get(key) ?? 0) + 1)
@@ -171,6 +206,20 @@ export function subscribeToNode(
 
   return () => {
     store.listeners.get(key)?.delete(listener)
+  }
+}
+
+// ─── Hydration ───────────────────────────────────────────────────────────────
+
+/**
+ * Hidrata el store con un snapshot clave/valor y notifica a los componentes
+ * suscritos a cada nodo. Usado por TelarRoot al recibir el snapshot del Worker.
+ */
+export function hydrateStore(snapshot: Record<string, unknown>, store: Store): void {
+  for (const [key, value] of Object.entries(snapshot)) {
+    // Reutilizamos setNodeValue pasando el valor directo.
+    // defaultValue no se usa cuando next no es función.
+    setNodeValue(key, value as never, store, undefined as never)
   }
 }
 

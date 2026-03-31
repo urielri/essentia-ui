@@ -11,7 +11,8 @@
   "exports": {
     ".": "./index.ts",
     "./react": "./react.ts",
-    "./server": "./server.ts"
+    "./server": "./server.ts",
+    "./worker": "./worker.ts"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

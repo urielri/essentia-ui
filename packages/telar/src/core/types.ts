@@ -77,6 +77,16 @@ export type KnotDef<T> = {
   readonly key: string
   /** Valor utilizado cuando el nodo nunca fue escrito en el store */
   readonly default: T
+  /**
+   * Si es `true`, el valor se cachea en `sessionStorage` bajo la clave `telar:<key>`.
+   * Permite que `TelarRoot` hidrate este nodo síncronamente en el primer render,
+   * eliminando el flash de defaults antes de que llegue el snapshot del Worker.
+   *
+   * **Solo para estado de UI no sensible** (temas, idioma, estado de paneles).
+   * Los valores en `sessionStorage` son texto plano y pueden ser modificados
+   * desde DevTools o por XSS — no usar para datos con lógica de negocio.
+   */
+  readonly uiCache?: boolean
 }
 
 /**
@@ -114,6 +124,32 @@ export type ThreadDef<T> = {
    * })
    */
   readonly equal?: (a: T, b: T) => boolean
+  /**
+   * Condición de apertura del thread. Si se provee y retorna `false`,
+   * la re-evaluación se cancela y el thread congela su último valor cacheado.
+   * Solo las dependencias del `gate` se mantienen activas — cambios en los
+   * nodos leídos por `get` son ignorados mientras el gate esté cerrado.
+   *
+   * Cuando el gate se abre (`true`), el thread se re-evalúa normalmente y
+   * registra de nuevo todas sus dependencias.
+   *
+   * Si el gate bloquea la primera evaluación (sin cache previo), se retorna
+   * el `default` del thread. Si no se provee `default`, retorna `undefined`.
+   *
+   * @example
+   * const pricesThread = thread({
+   *   key: 'prices',
+   *   default: [],
+   *   gate: ({ read }) => read(onlineKnot),
+   *   get:  ({ read }) => computePrices(read(cartKnot), read(ratesKnot)),
+   * })
+   */
+  readonly gate?: (ctx: ReadContext) => boolean
+  /**
+   * Valor retornado cuando `gate` bloquea la primera evaluación (sin cache).
+   * No tiene efecto en threads sin `gate`.
+   */
+  readonly default?: T
 }
 
 /**
@@ -129,6 +165,11 @@ export type BindDef<T, R extends Reducers<T>> = {
   readonly default: T
   /** Mapa de reducers que definen las transformaciones permitidas */
   readonly reducers: R
+  /**
+   * Si es `true`, el valor se cachea en `sessionStorage` bajo la clave `telar:<key>`.
+   * Ver documentación en `KnotDef.uiCache`.
+   */
+  readonly uiCache?: boolean
 }
 
 /**
@@ -190,4 +231,10 @@ export type Store = {
   cache: Map<string, CacheEntry>
   /** thread keys que necesitan re-evaluación */
   dirty: Set<string>
+  /**
+   * Hook de escritura opcional. Se llama cada vez que un knot o bind
+   * recibe un nuevo valor. Usado por TelarRoot para persistir cambios
+   * al Worker (y de ahí a IndexedDB).
+   */
+  onWrite?: (key: string, value: unknown) => void
 }
