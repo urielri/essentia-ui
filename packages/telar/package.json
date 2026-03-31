@@ -11,6 +11,7 @@
   "exports": {
     ".": "./index.ts",
     "./react": "./react.ts",
+    "./react-server": "./react-server.ts",
     "./server": "./server.ts",
     "./worker": "./worker.ts"
   },

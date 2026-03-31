@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
-import { TelarRoot } from '@repo/telar/react'
+import { TelarRootProvider as TelarRoot } from '@repo/telar/react'
 import { useKnot, useBind, useDispatch } from '@repo/telar/react'
 import { installedAppsKnot, recentAppsBind, type App } from '../../state/apps'
 

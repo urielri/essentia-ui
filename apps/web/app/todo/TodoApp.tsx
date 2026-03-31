@@ -1,6 +1,6 @@
 'use client'
 
-import { TelarRoot } from '@repo/telar/react'
+import { TelarRootProvider as TelarRoot } from '@repo/telar/react'
 import { TodoInput }      from './components/TodoInput'
 import { TodoFilter }     from './components/TodoFilter'
 import { TodoStats }      from './components/TodoStats'
