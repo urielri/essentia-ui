@@ -1,9 +1,10 @@
 /* ─── Variables ──────────────────────────────────────────────────────────────
-   El tema se aplica via data-theme en .pd-page.
-   Cambiar el atributo es suficiente — el resto es cascade.
+   :root define el tema dark como base — disponible para el skeleton y cualquier
+   elemento fuera de .pd-page.
+   .pd-page hereda y puede sobreescribir via data-theme.
    ─────────────────────────────────────────────────────────────────────────── */
 
-.pd-page {
+:root {
   --bg:         #0a0a0a;
   --surface:    #111111;
   --surface-2:  #181818;
@@ -18,6 +19,9 @@
   --radius:     10px;
   --radius-sm:  6px;
   --shadow:     0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.pd-page {
 
   min-height: 100vh;
   background: var(--bg);
