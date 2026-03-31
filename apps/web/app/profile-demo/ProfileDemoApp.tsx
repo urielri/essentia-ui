@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useKnot, useThread } from '@repo/telar/react'
 import {
   themeKnot, profileKnot, editingKnot, draftKnot, previewThread,
@@ -235,8 +236,13 @@ export function ProfileDemoContent() {
   const [theme]   = useKnot(themeKnot)
   const [editing] = useKnot(editingKnot)
 
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    return () => { document.documentElement.removeAttribute('data-theme') }
+  }, [theme])
+
   return (
-    <div className="pd-page" data-theme={theme}>
+    <div className="pd-page">
       <div className="pd-inner">
 
         <header className="pd-header">

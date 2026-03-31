@@ -30,7 +30,7 @@
   transition: background 0.2s ease, color 0.2s ease;
 }
 
-.pd-page[data-theme='soft'] {
+:root[data-theme='soft'] {
   --bg:         #f0ebe4;
   --surface:    #faf6f1;
   --surface-2:  #f0e9e0;
