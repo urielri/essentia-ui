@@ -31,34 +31,36 @@ pnpm add @repo/telar
 
 ```tsx
 // Importaciones disponibles
-import { knot, thread, bind }             from '@repo/telar'
-import { TelarRoot, useKnot, useThread,
-         useBind, useDispatch, useTelar } from '@repo/telar/react'
-import { createPrefetchContext }          from '@repo/telar/server'
+import { knot, thread, bind }                     from '@repo/telar'
+import { TelarRootProvider, TelarPersistence,
+         useKnot, useThread,
+         useBind, useDispatch, useTelar }          from '@repo/telar/react'
+import { TelarRoot }                              from '@repo/telar/react-server'
+import { createPrefetchContext }                  from '@repo/telar/server'
 import { createTelarWorker,
-         invalidatePersistedStore }       from '@repo/telar/worker'
+         invalidatePersistedStore }               from '@repo/telar/worker'
 ```
 
-**Envolver la app con `<TelarRoot>`:**
+**Envolver la app con `<TelarRootProvider>`:**
 
 ```tsx
 // app/layout.tsx o el componente raíz de tu app
-import { TelarRoot } from '@repo/telar/react'
+import { TelarRootProvider } from '@repo/telar/react'
 
 export default function RootLayout({ children }) {
   return (
     <html>
       <body>
-        <TelarRoot>
+        <TelarRootProvider>
           {children}
-        </TelarRoot>
+        </TelarRootProvider>
       </body>
     </html>
   )
 }
 ```
 
-`TelarRoot` crea un store reactivo aislado. Todos los hooks de Telar dentro del árbol se conectan a ese store.
+`TelarRootProvider` es un Client Component (`'use client'`) que crea un store reactivo aislado. Todos los hooks de Telar dentro del árbol se conectan a ese store.
 
 ---
 
@@ -139,7 +141,7 @@ setFilter(f => f === 'all' ? 'active' : 'all')  // función actualizadora
 **`uiCache` — hidratación síncrona sin flash:**
 
 ```typescript
-// TelarRoot lee este valor desde sessionStorage antes del primer render.
+// TelarPersistence lee este valor desde sessionStorage antes del primer render.
 // El usuario nunca ve el default 'dark' si ya eligió 'soft'.
 const themeKnot = knot({
   key:     'theme',
@@ -375,7 +377,7 @@ feature/
     TodoInput.tsx     ← useDispatch(todosBind) — solo escribe
     TodoFilter.tsx    ← useKnot(filterKnot)
     TodoStats.tsx     ← useThread(statsThread)
-  TodoApp.tsx         ← <TelarRoot> + layout
+  TodoApp.tsx         ← <TelarRootProvider> + layout
 ```
 
 ### El archivo de estado
@@ -594,45 +596,45 @@ export const userKnot = knot({
 })
 ```
 
-**2. Prefetch en el Server Component:**
+**2. Usar `<TelarRoot>` en el Server Component:**
 
 ```tsx
-// app/dashboard/page.tsx (Server Component)
-import { createPrefetchContext } from '@repo/telar/server'
-import { userKnot }              from '@/state/user'
-import { cartKnot }              from '@/state/cart'
-import { DashboardClient }       from './DashboardClient'
+// app/dashboard/page.tsx — Server Component
+import { Suspense }  from 'react'
+import { TelarRoot } from '@repo/telar/react-server'
+import { userKnot }  from '@/state/user'
+import { cartKnot }  from '@/state/cart'
 
-export default async function DashboardPage() {
-  const prefetch = createPrefetchContext({ session: await getSession() })
-
-  // Los fetches pueden correr en paralelo
-  await Promise.all([
-    prefetch(userKnot),
-    prefetch(cartKnot),
-  ])
-
-  return <DashboardClient initialValues={prefetch.flush()} />
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <TelarRoot prefetchNodes={[userKnot, cartKnot]}>
+        <Dashboard />
+      </TelarRoot>
+    </Suspense>
+  )
 }
 ```
 
-**3. Pasar al TelarRoot:**
+`TelarRoot` es un async Server Component que internamente llama a `createPrefetchContext`, corre todos los prefetches en paralelo y renderiza `TelarRootProvider` con los `initialValues` ya cargados. Next.js crea una Suspense boundary implícita, pero envolverlo explícitamente permite mostrar un skeleton.
+
+En el primer render tras resolver, el store ya tiene los datos del servidor — sin loading state, sin flash.
+
+**Si necesitás pasar contexto (token de auth, parámetros) a `server()`:**
 
 ```tsx
-// app/dashboard/DashboardClient.tsx
-'use client'
+// prefetchCtx se reenvía a cada llamada server() de los nodos
+<TelarRoot
+  prefetchNodes={[userKnot, cartKnot]}
+  prefetchCtx={{ userId: session.userId }}
+>
+  <Dashboard />
+</TelarRoot>
+```
 
-import { TelarRoot } from '@repo/telar/react'
+**En cualquier componente del árbol:**
 
-export function DashboardClient({ initialValues }) {
-  return (
-    <TelarRoot initialValues={initialValues}>
-      <Dashboard />
-    </TelarRoot>
-  )
-}
-
-// En cualquier componente del árbol:
+```tsx
 function UserGreeting() {
   const [user] = useKnot(userKnot)
   // user nunca es null aquí — llegó hidratado del servidor
@@ -643,17 +645,45 @@ function UserGreeting() {
 **Flujo:**
 
 ```
-Server Component
-  └─ createPrefetchContext()
-  └─ prefetch(userKnot) → ejecuta userKnot.server() → aplica sanitize
-  └─ prefetch.flush() → { 'user': { id: 1, name: 'Ana' } }
-  └─ pasa como prop a DashboardClient
+TelarRoot (async Server Component)
+  └─ createPrefetchContext(prefetchCtx)
+  └─ Promise.all([prefetch(userKnot), prefetch(cartKnot)])
+       → ejecuta server() de cada nodo → aplica sanitize
+  └─ initialValues = { 'user': { id: 1, name: 'Ana' }, 'cart': [...] }
+  └─ renderiza <TelarRootProvider initialValues={initialValues}>
 
-Client Component (DashboardClient)
-  └─ <TelarRoot initialValues={{ 'user': { id: 1, name: 'Ana' } }}>
-  └─ TelarRoot carga initialValues en store.values en cada render (guard !has)
+TelarRootProvider (Client Component)
+  └─ carga initialValues en store.values (guard !has)
   └─ getServerSnapshot usa getNodeValue → server HTML ya incluye los datos reales
   └─ UserGreeting lee user → ya tiene el valor → sin loading state
+```
+
+**Alternativa de bajo nivel (para `getServerSideProps` o casos avanzados):**
+
+Si necesitás control manual sobre los prefetches, podés usar `createPrefetchContext` directamente y pasarlo al `TelarRootProvider` via un wrapper client:
+
+```tsx
+// app/dashboard/page.tsx
+import { createPrefetchContext } from '@repo/telar/server'
+import { DashboardClient }       from './DashboardClient'
+
+export default async function DashboardPage() {
+  const prefetch = createPrefetchContext({ session: await getSession() })
+  await Promise.all([prefetch(userKnot), prefetch(cartKnot)])
+  return <DashboardClient initialValues={prefetch.flush()} />
+}
+
+// app/dashboard/DashboardClient.tsx
+'use client'
+import { TelarRootProvider } from '@repo/telar/react'
+
+export function DashboardClient({ initialValues }) {
+  return (
+    <TelarRootProvider initialValues={initialValues}>
+      <Dashboard />
+    </TelarRootProvider>
+  )
+}
 ```
 
 ---
@@ -666,7 +696,7 @@ Para apps Next.js Pages Router o frameworks con `getServerSideProps`:
 // pages/dashboard.tsx
 import { createPrefetchContext } from '@repo/telar/server'
 import { userKnot, cartKnot }    from '@/state'
-import { TelarRoot }             from '@repo/telar/react'
+import { TelarRootProvider }     from '@repo/telar/react'
 
 export async function getServerSideProps(ctx) {
   const prefetch = createPrefetchContext({ session: ctx.req.session })
@@ -681,9 +711,9 @@ export async function getServerSideProps(ctx) {
 
 export default function DashboardPage({ initialValues }) {
   return (
-    <TelarRoot initialValues={initialValues}>
+    <TelarRootProvider initialValues={initialValues}>
       <Dashboard />
-    </TelarRoot>
+    </TelarRootProvider>
   )
 }
 ```
@@ -694,33 +724,33 @@ export default function DashboardPage({ initialValues }) {
 
 ## 11. Stores múltiples e isolación
 
-### Cada `<TelarRoot>` es un store independiente
+### Cada `<TelarRootProvider>` es un store independiente
 
 ```tsx
 // Los mismos knots, distintos valores en cada árbol
-<TelarRoot>
+<TelarRootProvider>
   <CheckoutWidget />    {/* cart, user con sus valores */}
-</TelarRoot>
+</TelarRootProvider>
 
-<TelarRoot>
+<TelarRootProvider>
   <PreviewWidget />     {/* cart, user con valores diferentes e independientes */}
-</TelarRoot>
+</TelarRootProvider>
 ```
 
 ### Store externo para tests o microfrontends
 
 ```typescript
-import { createStore } from '@repo/telar'
-import { TelarRoot }   from '@repo/telar/react'
+import { createStore }       from '@repo/telar'
+import { TelarRootProvider } from '@repo/telar/react'
 
 // En tests
 const testStore = createStore()
 testStore.values.set('user', { id: 'test-user', name: 'Test' })
 
 render(
-  <TelarRoot store={testStore}>
+  <TelarRootProvider store={testStore}>
     <UserProfile />
-  </TelarRoot>
+  </TelarRootProvider>
 )
 ```
 
@@ -857,7 +887,7 @@ En aplicaciones MPA (Multi-Page Application) o SPAs con recargas de página, el 
 
 ### Modos de persistencia
 
-`TelarRoot` acepta la prop `persistence` que controla el ciclo de vida de los datos:
+`TelarPersistence` acepta la prop `persistence` que controla el ciclo de vida de los datos:
 
 | Modo | Sobrevive recarga | Sobrevive navegación MPA | Sobrevive cierre del tab/navegador |
 |------|:-----------------:|:------------------------:|:----------------------------------:|
@@ -870,20 +900,22 @@ En aplicaciones MPA (Multi-Page Application) o SPAs con recargas de página, el 
 
 ### Setup básico
 
-Crear el Worker **fuera del componente** (a nivel de módulo o punto de entrada):
+Crear el Worker **fuera del componente** (a nivel de módulo o punto de entrada). `TelarRootProvider` crea el store y `TelarPersistence` conecta el Worker y maneja la persistencia:
 
 ```typescript
 // main.tsx o App.tsx
-import { createTelarWorker } from '@repo/telar/worker'
-import { TelarRoot }         from '@repo/telar/react'
+import { createTelarWorker }                    from '@repo/telar/worker'
+import { TelarRootProvider, TelarPersistence }  from '@repo/telar/react'
 
 const worker = createTelarWorker()  // una sola vez, fuera del componente
 
 function App() {
   return (
-    <TelarRoot worker={worker}>
-      <Router />
-    </TelarRoot>
+    <TelarRootProvider>
+      <TelarPersistence worker={worker}>
+        <Router />
+      </TelarPersistence>
+    </TelarRootProvider>
   )
 }
 ```
@@ -892,12 +924,12 @@ Todos los hooks (`useKnot`, `useBind`, `useThread`, etc.) funcionan exactamente 
 
 ### Setup con seguridad completa
 
-Para activar las cuatro capas de defensa del Worker, pasar `persistedNodes` y `nodeConstraints`:
+Para activar las cuatro capas de defensa del Worker, pasar `persistedNodes` y `nodeConstraints` a `TelarPersistence`:
 
 ```typescript
 import { createTelarWorker, invalidatePersistedStore } from '@repo/telar/worker'
-import { TelarRoot }                           from '@repo/telar/react'
-import { themeKnot, noteKnot, counterBind }    from './state'
+import { TelarRootProvider, TelarPersistence }         from '@repo/telar/react'
+import { themeKnot, noteKnot, counterBind }            from './state'
 
 const THEMES = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6']
 
@@ -905,19 +937,21 @@ const worker = createTelarWorker()
 
 function App() {
   return (
-    <TelarRoot
-      worker={worker}
-      storeVersion="1"
-      persistence="session"
-      persistedNodes={[themeKnot, noteKnot, counterBind]}
-      nodeConstraints={{
-        'theme':   { allowedValues: THEMES },
-        'note':    { maxLength: 10_000 },
-        'counter': { min: 0, max: 9_999 },
-      }}
-    >
-      <Router />
-    </TelarRoot>
+    <TelarRootProvider>
+      <TelarPersistence
+        worker={worker}
+        storeVersion="1"
+        persistence="session"
+        persistedNodes={[themeKnot, noteKnot, counterBind]}
+        nodeConstraints={{
+          'theme':   { allowedValues: THEMES },
+          'note':    { maxLength: 10_000 },
+          'counter': { min: 0, max: 9_999 },
+        }}
+      >
+        <Router />
+      </TelarPersistence>
+    </TelarRootProvider>
   )
 }
 ```
@@ -949,9 +983,9 @@ const cartTotalThread = thread({ key: 'cartTotal', get: ({ read }) => ... })
 ### Comportamiento en la primera carga
 
 ```
-1. React monta → TelarRoot conecta al Worker
-2. TelarRoot envía 'init' al Worker (nodes, persistence, sessionId?, version?)
-3. TelarRoot envía 'get-snapshot' al Worker
+1. React monta → TelarPersistence conecta al Worker
+2. TelarPersistence envía 'init' al Worker (nodes, persistence, sessionId?, version?)
+3. TelarPersistence envía 'get-snapshot' al Worker
 4. Worker filtra IDB según el modo de persistencia:
    - session: descarta entradas con sessionId distinto + las borra (limpieza)
    - permanent: devuelve todas las entradas válidas
@@ -976,7 +1010,7 @@ const themeKnot = knot({
 })
 ```
 
-`TelarRoot` lee automáticamente los nodos con `uiCache: true` desde `sessionStorage` y los pasa como `initialValues`. El Worker sigue siendo la fuente autoritativa — cuando llega el snapshot, `sessionStorage` se sincroniza con los valores del Worker.
+`TelarPersistence` lee automáticamente los nodos con `uiCache: true` desde `sessionStorage` en su render body (antes de que los children se rendericen), de modo que el store ya tiene el valor correcto en el primer render. El Worker sigue siendo la fuente autoritativa — cuando llega el snapshot, `sessionStorage` se sincroniza con los valores del Worker.
 
 **Cuándo usar `uiCache: true`:**
 - Tema de color, modo oscuro/claro
@@ -988,7 +1022,23 @@ const themeKnot = knot({
 - Cantidades, precios, contadores con lógica de negocio
 - Datos de sesión de usuario
 - Cualquier valor donde la manipulación desde DevTools tenga consecuencias
-- **Páginas con SSR:** `sessionStorage` no existe en el servidor. `uiCache` solo elimina el flash en navegación MPA client-side; no puede evitar el flash del ciclo SSR → hidratación. Para ese caso, la única solución es un `<script>` inline en `<head>` que aplique el valor antes de que el HTML se pinte.
+- **Páginas con SSR:** `sessionStorage` no existe en el servidor. `uiCache` solo elimina el flash en navegación MPA client-side; no puede evitar el flash del ciclo SSR → hidratación. Para ese caso, la única solución es un `<script>` inline en `<head>` que aplique el valor antes de que el HTML se pinte:
+
+```tsx
+// app/layout.tsx — patrón de tema sin flash en SSR
+const THEME_SCRIPT = `(function(){try{var t=sessionStorage.getItem('telar:app-theme');if(t)document.documentElement.setAttribute('data-theme',JSON.parse(t))}catch(e){}})();`
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head><script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} /></head>
+      <body>{children}</body>
+    </html>
+  )
+}
+```
+
+El `suppressHydrationWarning` en `<html>` evita que React se queje del `data-theme` que el script inline aplica antes de la hidratación.
 
 **Por qué no es para datos sensibles:**
 
@@ -1073,10 +1123,10 @@ invalidatePersistedStore(worker, ['cart'], [themeKnot])
 
 ### Invalidación automática por versión de esquema
 
-Cuando los nodos persistidos cambian (nuevas keys, cambios de tipo, estructura diferente), incrementar `storeVersion` en `TelarRoot` para limpiar IDB automáticamente en la próxima carga:
+Cuando los nodos persistidos cambian (nuevas keys, cambios de tipo, estructura diferente), incrementar `storeVersion` en `TelarPersistence` para limpiar IDB automáticamente en la próxima carga:
 
 ```tsx
-<TelarRoot
+<TelarPersistence
   worker={worker}
   storeVersion="2"           // ← incrementar cuando cambia el esquema
   persistedNodes={[...]}

@@ -28,15 +28,15 @@ const doubleThread = thread({
   get: ({ read }) => read(countKnot) * 2,
 })
 
-// 2. Envolvé tu app con TelarRoot
-import { TelarRoot } from '@repo/telar/react'
+// 2. Envolvé tu app con TelarRootProvider
+import { TelarRootProvider } from '@repo/telar/react'
 
 function App() {
   return (
-    <TelarRoot>
+    <TelarRootProvider>
       <Counter />
       <Display />
-    </TelarRoot>
+    </TelarRootProvider>
   )
 }
 
@@ -238,20 +238,20 @@ useTelar(bind)    // → [value, dispatch]
 
 ---
 
-## Aislamiento con `TelarRoot`
+## Aislamiento con `TelarRootProvider`
 
-Cada `<TelarRoot>` crea su propio store. Dos árboles nunca comparten estado
+Cada `<TelarRootProvider>` crea su propio store. Dos árboles nunca comparten estado
 aunque usen los mismos nodos. Esto es fundamental para SSR: no hay singletons
 globales que filtren estado entre requests.
 
 ```tsx
-<TelarRoot>
+<TelarRootProvider>
   <AppA />   {/* store A */}
-</TelarRoot>
+</TelarRootProvider>
 
-<TelarRoot>
+<TelarRootProvider>
   <AppB />   {/* store B — completamente independiente */}
-</TelarRoot>
+</TelarRootProvider>
 ```
 
 ---
@@ -274,18 +274,17 @@ export const userKnot: ServerKnotDef<User | null> = {
 
 ```tsx
 // app/page.tsx — Server Component
-import { createPrefetchContext } from '@repo/telar/server'
-import { TelarRoot } from '@repo/telar/react'
-import { userKnot } from '../state/user'
+import { Suspense }  from 'react'
+import { TelarRoot } from '@repo/telar/react-server'
+import { userKnot }  from '../state/user'
 
-export default async function Page() {
-  const prefetch = createPrefetchContext()
-  await prefetch(userKnot)
-
+export default function Page() {
   return (
-    <TelarRoot initialValues={prefetch.flush()}>
-      <App />
-    </TelarRoot>
+    <Suspense fallback={<PageSkeleton />}>
+      <TelarRoot prefetchNodes={[userKnot]}>
+        <App />
+      </TelarRoot>
+    </Suspense>
   )
 }
 
@@ -299,6 +298,9 @@ function UserProfile() {
 ### SSR tradicional con `getServerSideProps`
 
 ```typescript
+import { createPrefetchContext } from '@repo/telar/server'
+import { TelarRootProvider }     from '@repo/telar/react'
+
 export async function getServerSideProps(ctx) {
   const prefetch = createPrefetchContext(ctx)
 
@@ -310,9 +312,9 @@ export async function getServerSideProps(ctx) {
 
 export default function Page({ initialValues }) {
   return (
-    <TelarRoot initialValues={initialValues}>
+    <TelarRootProvider initialValues={initialValues}>
       <App />
-    </TelarRoot>
+    </TelarRootProvider>
   )
 }
 ```
@@ -390,6 +392,31 @@ const isStepValidThread = thread({
   },
 })
 ```
+
+---
+
+## Persistencia MPA con Worker
+
+Para apps multi-página (MPA) que necesitan sobrevivir navegaciones completas, Telar ofrece persistencia vía Web Worker + IndexedDB. `TelarPersistence` es un Client Component que conecta el Worker, lee nodos `uiCache` síncronamente desde `sessionStorage` en el render (eliminando el flash de defaults), y recibe el snapshot completo del Worker al montar.
+
+```tsx
+import { createTelarWorker }                    from '@repo/telar/worker'
+import { TelarRootProvider, TelarPersistence }  from '@repo/telar/react'
+
+const worker = createTelarWorker()
+
+function App() {
+  return (
+    <TelarRootProvider>
+      <TelarPersistence worker={worker} persistedNodes={[themeKnot, cartBind]}>
+        <Router />
+      </TelarPersistence>
+    </TelarRootProvider>
+  )
+}
+```
+
+Ver [IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md) sección 13 para el setup completo con `nodeConstraints`, `storeVersion` y el patrón de tema sin flash en SSR.
 
 ---
 
