@@ -1,15 +1,21 @@
 {
-  "extends": "@repo/typescript-config/react-library.json",
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "declaration": true,
+    "declarationMap": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
     "baseUrl": ".",
-    "rootDir": ".",
     "paths": {
-      "#components/*": ["./components/*"],
-      "#internal/*": ["./components/internal/*"],
-      "#icons": ["./components/icons/index.tsx"]
+      "$lib": ["./src/lib"],
+      "$lib/*": ["./src/lib/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", "css.d.ts", "vite.config.js"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*.ts", "src/**/*.svelte", "vite.config.ts"]
 }

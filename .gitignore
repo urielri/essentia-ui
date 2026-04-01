@@ -4,6 +4,7 @@
 dist/
 results/
 packages/ui-old/
-packages/ui/
+packages/ui-deprecated/
+packages/svelte-deprecated/
 node_modules/
 references/
