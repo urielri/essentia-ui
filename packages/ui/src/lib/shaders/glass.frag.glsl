@@ -1,11 +1,14 @@
 // ──────────────────────────────────────────────────────────────
-// Liquid Glass — Fase 3
+// Liquid Glass — Fase 3 + Environment Map
 //
 // Pipeline:
-//   1. La escena de fondo se captura a u_background antes de este draw call
-//   2. Se distorsionan las coordenadas de pantalla según IOR
-//   3. Se aplica aberración cromática, tinte y Fresnel
+//   1. Captura de fondo → u_background (RenderTarget)
+//   2. Distorsión IOR + aberración cromática
+//   3. Reflejo de entorno (equirectangular EXR) sobre superficie virtual
+//   4. Tinte, Fresnel, shape masking SDF
 // ──────────────────────────────────────────────────────────────
+
+#define PI 3.14159265359
 
 // Fondo capturado (WebGLRenderTarget de la escena sin este objeto)
 uniform sampler2D u_background;
@@ -13,23 +16,23 @@ uniform sampler2D u_background;
 // Métricas del viewport — en píxeles
 uniform vec2 u_resolution;
 
-// Geometría del elemento (mismos roles que en sdf-rect)
+// Geometría del elemento
 uniform vec2 u_size;
 uniform float u_radius;
 uniform float u_softness;
 
-// Óptica
-// u_ior:         Índice de refracción. 1.0 = sin distorsión, 1.5 = vidrio estándar
-// u_distortion:  Multiplicador de la intensidad total de distorsión
+// Óptica de refracción
 uniform float u_ior;
 uniform float u_distortion;
-
-// Aberración cromática: desplazamiento relativo entre canales R y B
-// 0.0 = sin aberración, 0.03 = efecto notable
 uniform float u_chromatic_aberration;
 
 // Tinte RGBA sobre el fondo refractado
 uniform vec4 u_tint;
+
+// Environment map equirectangular (EXR)
+// u_env_intensity = 0.0 → env map desactivado (fallback sin textura)
+uniform sampler2D u_env_map;
+uniform float u_env_intensity;
 
 varying vec2 v_uv;
 
@@ -39,44 +42,60 @@ float sdRoundedBox(vec2 p, vec2 b, float r) {
   return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
 }
 
+// Muestrea un env map equirectangular dado un vector de dirección 3D
+vec3 sampleEnvMap(vec3 dir) {
+  float phi   = atan(dir.z, dir.x);                   // [-PI, PI]
+  float theta = asin(clamp(dir.y, -1.0, 1.0));        // [-PI/2, PI/2]
+  vec2 uv = vec2(
+    0.5 + phi   / (2.0 * PI),
+    0.5 + theta / PI
+  );
+  return texture2D(u_env_map, uv).rgb;
+}
+
 void main() {
   // ── 1. Shape masking via SDF ──────────────────────────────────
   vec2 p = (v_uv - 0.5) * u_size;
   float d = sdRoundedBox(p, u_size * 0.5, u_radius);
   float alpha = 1.0 - smoothstep(-u_softness, u_softness, d);
-
-  // Early exit para píxeles completamente transparentes
   if (alpha < 0.001) discard;
 
   // ── 2. Screen-space UV ────────────────────────────────────────
-  // gl_FragCoord en píxeles desde bottom-left, igual que el RenderTarget
   vec2 screenUV = gl_FragCoord.xy / u_resolution;
-
-  // ── 3. Refracción lens-based ──────────────────────────────────
-  // toCenter: vector desde el centro del glass hasta el fragmento, normalizado a [-0.5, 0.5]
-  // Con cámara ortográfica 1:1 este vector es equivalente al ángulo de incidencia simplificado
   vec2 toCenter = v_uv - 0.5;
 
-  // Distorsión proporcional a (IOR - 1.0): sin refracción si IOR = 1.0
-  // El signo negativo hace que el glass actúe como lente convergente (vidrio convexo)
+  // ── 3. Refracción lens-based ──────────────────────────────────
   vec2 refractOffset = -toCenter * (u_ior - 1.0) * u_distortion;
 
   // ── 4. Aberración cromática ───────────────────────────────────
-  // R se desplaza en la dirección de refracción, B en sentido opuesto
-  // Simula la dispersión del espectro que ocurre en vidrio real
   float ca = u_chromatic_aberration;
   float r = texture2D(u_background, screenUV + refractOffset * (1.0 + ca)).r;
   float g = texture2D(u_background, screenUV + refractOffset).g;
   float b = texture2D(u_background, screenUV + refractOffset * (1.0 - ca)).b;
-
   vec3 refracted = vec3(r, g, b);
 
-  // ── 5. Tinte ──────────────────────────────────────────────────
+  // ── 5. Reflejo del entorno (IBL) ──────────────────────────────
+  // Normal virtual: la superficie del glass se trata como ligeramente convexa.
+  // toCenter desplaza el normal hacia los bordes → el centro refleja el cénit,
+  // los bordes reflejan el horizonte del env map.
+  // curvature controla cuán pronunciada es la "lente" virtual.
+  float curvature = 0.6;
+  vec3 virtualNormal = normalize(vec3(-toCenter.x * curvature, toCenter.y * curvature, 1.0));
+
+  // Cámara ortográfica mira en -Z → reflect da la dirección de reflejo
+  vec3 viewDir = vec3(0.0, 0.0, -1.0);
+  vec3 reflDir = reflect(viewDir, virtualNormal);
+
+  vec3 envColor = sampleEnvMap(reflDir);
+
+  // El env map se mezcla sobre el color refractado
+  // u_env_intensity controla la contribución; 0 = sin efecto
+  refracted = mix(refracted, refracted + envColor, u_env_intensity * 0.5);
+
+  // ── 6. Tinte ──────────────────────────────────────────────────
   refracted = mix(refracted, u_tint.rgb, u_tint.a);
 
-  // ── 6. Fresnel edge ───────────────────────────────────────────
-  // Borde ligeramente más brillante: simula la reflexión especular en ángulos oblicuos
-  // Se calcula como función de la distancia al borde del SDF
+  // ── 7. Fresnel edge ───────────────────────────────────────────
   float edgeProximity = 1.0 - smoothstep(0.0, 8.0, -d);
   refracted += edgeProximity * 0.06;
 

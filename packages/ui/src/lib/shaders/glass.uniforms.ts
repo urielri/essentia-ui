@@ -11,6 +11,10 @@ export type GlassUniforms = {
   u_distortion: IUniform<number>
   u_chromatic_aberration: IUniform<number>
   u_tint: IUniform<Vector4>
+  /** Textura equirectangular (EXR/HDR). null = sin env map. */
+  u_env_map: IUniform<Texture | null>
+  /** Intensidad del reflejo del entorno [0..1]. 0 = desactivado. */
+  u_env_intensity: IUniform<number>
 }
 
 export type GlassUniformsParams = {
@@ -28,6 +32,8 @@ export type GlassUniformsParams = {
   tintB: number
   tintA: number
   background: Texture | null
+  envMap?: Texture | null
+  envIntensity?: number
 }
 
 export function createGlassUniforms(p: GlassUniformsParams): GlassUniforms {
@@ -41,5 +47,7 @@ export function createGlassUniforms(p: GlassUniformsParams): GlassUniforms {
     u_distortion: { value: p.distortion },
     u_chromatic_aberration: { value: p.chromaticAberration },
     u_tint: { value: new Vector4(p.tintR, p.tintG, p.tintB, p.tintA) },
+    u_env_map: { value: p.envMap ?? null },
+    u_env_intensity: { value: p.envIntensity ?? 0 },
   }
 }

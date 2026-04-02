@@ -1,7 +1,7 @@
 <script lang="ts">
   import { T, useThrelte } from '@threlte/core'
   import { Color, PlaneGeometry, ShaderMaterial } from 'three'
-  import type { Mesh } from 'three'
+  import type { Mesh, Texture } from 'three'
   import vertexShader from '../shaders/glass.vert.glsl'
   import fragmentShader from '../shaders/glass.frag.glsl'
   import { createGlassUniforms } from '../shaders/glass.uniforms.js'
@@ -47,6 +47,16 @@
     tintOpacity?: number
     /** Suavidad del borde AA en píxeles. @default 1.5 */
     softness?: number
+    /**
+     * Textura equirectangular para IBL (cargada externamente con EXRLoader).
+     * null = sin reflejo de entorno.
+     */
+    envMap?: Texture | null
+    /**
+     * Intensidad del reflejo del entorno [0..1].
+     * @default 0
+     */
+    envIntensity?: number
     x?: number
     y?: number
     z?: number
@@ -62,6 +72,8 @@
     tint = '#ffffff',
     tintOpacity = 0,
     softness = 1.5,
+    envMap = null,
+    envIntensity = 0,
     x = 0,
     y = 0,
     z = 0,
@@ -96,6 +108,8 @@
     tintB: _tint.b,
     tintA: tintOpacity,
     background: renderTarget.texture,
+    envMap,
+    envIntensity,
   })
 
   const material = new ShaderMaterial({
@@ -138,6 +152,9 @@
 
     const c = new Color(tint)
     uniforms.u_tint.value.set(c.r, c.g, c.b, tintOpacity)
+
+    uniforms.u_env_map.value = envMap
+    uniforms.u_env_intensity.value = envIntensity
 
     invalidate()
   })

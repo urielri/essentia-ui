@@ -8,3 +8,5 @@ packages/ui-deprecated/
 packages/svelte-deprecated/
 node_modules/
 references/
+*.exr
+*.hdr
