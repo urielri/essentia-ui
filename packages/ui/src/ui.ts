@@ -1,5 +1,6 @@
 // Componentes
 export { default as EssentiaRoot } from './lib/components/essentia-root.svelte'
+export { default as Rect } from './lib/components/rect.svelte'
 
 // Nodos
 export { EssentiaNode } from './lib/nodes/essentia-node.js'

@@ -28,7 +28,7 @@
     }
   },
   "dependencies": {
-    "@repo/ui-svelte": "*",
+    "essentia": "*",
     "@threlte/core": "^8.1.5",
     "three": "^0.180.0"
   },
