@@ -1,38 +1,83 @@
 <script lang="ts">
-  import { EssentiaRoot, Rect } from 'essentia/ui'
+  import { EssentiaRoot, Rect, Glass } from 'essentia/ui'
 </script>
 
 <div class="stage">
   <EssentiaRoot>
 
     <!--
-      ── Fase 2: SDF Rect ──────────────────────────────────────────
-      Coordenadas en píxeles. Origen (0,0) = centro del canvas.
+      ── Fondo — capa de rects (z = 0) ────────────────────────────
+      Estos rects son el "contenido" que el glass va a refractar.
     -->
 
-    <!-- Fila 1 — Radio de esquinas: 0 → 8 → 18 → pill -->
-    <Rect width={110} height={52} radius={0}   color="#6c63ff" x={-255} y={100} />
-    <Rect width={110} height={52} radius={8}   color="#6c63ff" x={-85}  y={100} />
-    <Rect width={110} height={52} radius={18}  color="#6c63ff" x={85}   y={100} />
-    <Rect width={110} height={52} radius={999} color="#6c63ff" x={255}  y={100} />
+    <!-- Grid de colores distribuido en el fondo -->
+    <Rect width={160} height={160} radius={20} color="#6c63ff" x={-300} y={160}  />
+    <Rect width={160} height={160} radius={20} color="#ff6584" x={-120} y={160}  />
+    <Rect width={160} height={160} radius={20} color="#43c6ac" x={60}   y={160}  />
+    <Rect width={160} height={160} radius={20} color="#f8b500" x={240}  y={160}  />
 
-    <!-- Fila 2 — Paleta de colores -->
-    <Rect width={110} height={52} radius={12} color="#ff6584" x={-255} y={20} />
-    <Rect width={110} height={52} radius={12} color="#43c6ac" x={-85}  y={20} />
-    <Rect width={110} height={52} radius={12} color="#f8b500" x={85}   y={20} />
-    <Rect width={110} height={52} radius={12} color="#e8c3f8" x={255}  y={20} />
+    <Rect width={160} height={160} radius={80} color="#e8c3f8" x={-300} y={-20}  />
+    <Rect width={160} height={160} radius={80} color="#ff6584" x={-120} y={-20}  />
+    <Rect width={160} height={160} radius={80} color="#43c6ac" x={60}   y={-20}  />
+    <Rect width={160} height={160} radius={80} color="#6c63ff" x={240}  y={-20}  />
 
-    <!-- Fila 3 — Degradado de opacidad: 100% → 8% -->
-    <Rect width={110} height={52} radius={12} color="#ffffff" opacity={1.0}  x={-255} y={-60} />
-    <Rect width={110} height={52} radius={12} color="#ffffff" opacity={0.6}  x={-85}  y={-60} />
-    <Rect width={110} height={52} radius={12} color="#ffffff" opacity={0.3}  x={85}   y={-60} />
-    <Rect width={110} height={52} radius={12} color="#ffffff" opacity={0.08} x={255}  y={-60} />
+    <Rect width={160} height={160} radius={0}  color="#f8b500" x={-300} y={-200} />
+    <Rect width={160} height={160} radius={0}  color="#6c63ff" x={-120} y={-200} />
+    <Rect width={160} height={160} radius={0}  color="#e8c3f8" x={60}   y={-200} />
+    <Rect width={160} height={160} radius={0}  color="#ff6584" x={240}  y={-200} />
 
-    <!-- Fila 4 — Tamaños variados -->
-    <Rect width={52}  height={52}  radius={10} color="#ff6584" x={-255} y={-150} />
-    <Rect width={110} height={52}  radius={10} color="#43c6ac" x={-140} y={-150} />
-    <Rect width={200} height={52}  radius={10} color="#f8b500" x={10}   y={-150} />
-    <Rect width={52}  height={100} radius={10} color="#6c63ff" x={170}  y={-126} />
+    <!--
+      ── Fase 3: Glass (z = 1, delante del fondo) ──────────────────
+      El glass captura lo que hay detrás y aplica refracción IOR.
+
+      Variaciones de izquierda a derecha:
+        - IOR y distortion crecientes
+        - Aberración cromática creciente
+        - Con tinte sutil
+    -->
+
+    <!-- Fila superior: variaciones de IOR -->
+    <Glass width={140} height={60} radius={14}
+      ior={1.1} distortion={0.2} chromaticAberration={0}
+      x={-240} y={80} z={1} />
+
+    <Glass width={140} height={60} radius={14}
+      ior={1.3} distortion={0.3} chromaticAberration={0.01}
+      x={-80} y={80} z={1} />
+
+    <Glass width={140} height={60} radius={14}
+      ior={1.5} distortion={0.4} chromaticAberration={0.02}
+      x={80} y={80} z={1} />
+
+    <Glass width={140} height={60} radius={14}
+      ior={1.8} distortion={0.5} chromaticAberration={0.04}
+      x={240} y={80} z={1} />
+
+    <!-- Fila central: glass con tinte -->
+    <Glass width={140} height={60} radius={999}
+      ior={1.4} distortion={0.3} chromaticAberration={0.015}
+      tint="#6c63ff" tintOpacity={0.15}
+      x={-240} y={-20} z={1} />
+
+    <Glass width={140} height={60} radius={999}
+      ior={1.4} distortion={0.3} chromaticAberration={0.015}
+      tint="#ff6584" tintOpacity={0.15}
+      x={-80} y={-20} z={1} />
+
+    <Glass width={140} height={60} radius={999}
+      ior={1.4} distortion={0.3} chromaticAberration={0.015}
+      tint="#43c6ac" tintOpacity={0.15}
+      x={80} y={-20} z={1} />
+
+    <Glass width={140} height={60} radius={999}
+      ior={1.4} distortion={0.3} chromaticAberration={0.015}
+      tint="#f8b500" tintOpacity={0.15}
+      x={240} y={-20} z={1} />
+
+    <!-- Panel grande: glass que cubre múltiples rects del fondo -->
+    <Glass width={360} height={100} radius={20}
+      ior={1.4} distortion={0.25} chromaticAberration={0.02}
+      x={-60} y={-160} z={1} />
 
   </EssentiaRoot>
 </div>

@@ -1,6 +1,7 @@
 // Componentes
 export { default as EssentiaRoot } from './lib/components/essentia-root.svelte'
 export { default as Rect } from './lib/components/rect.svelte'
+export { default as Glass } from './lib/components/glass.svelte'
 
 // Nodos
 export { EssentiaNode } from './lib/nodes/essentia-node.js'
