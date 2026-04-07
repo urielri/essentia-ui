@@ -1,32 +1,69 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
+  import type { Texture } from 'three'
   import { Canvas } from '@threlte/core'
+  import { Environment } from '@threlte/extras'
   import OrthoCamera from '../core/ortho-camera.svelte'
+  import BackgroundCapture from '../core/background-capture.svelte'
+  import SceneBackground from '../core/scene-background.svelte'
   import { createEngine } from '../core/engine.svelte.js'
+  import type { EnvironmentOptions } from './essentia-root.types.js'
 
   interface Props {
     class?: string
     style?: string
+    /** Color de fondo de la escena (CSS hex o nombre). Se aplica a scene.background para que
+     *  BackgroundCapture lo capture y Glass lo refracte correctamente. @default '#000000' */
+    background?: string
     /**
-     * Contenido de la escena 3D. Debe ser un árbol de componentes Threlte.
-     * Toda lógica GPU va aquí: meshes, luces, efectos.
+     * Textura de entorno (equirectangular) ya construida. Tiene precedencia sobre
+     * `environment` si ambos se proveen.
      */
+    envMap?: Texture | null
+    /**
+     * Configuración para cargar el environment map automáticamente con
+     * `<Environment/>`. Se ignora si `envMap` está presente.
+     */
+    environment?: EnvironmentOptions | null
     children?: Snippet
-    /**
-     * Overlay DOM. Se renderiza sobre el canvas con pointer-events: none.
-     * Uso: Ghost Inputs, Shadow Layer para accesibilidad.
-     */
     ui?: Snippet
   }
 
-  let { class: className = '', style = '', children, ui }: Props = $props()
+  let {
+    class: className = '',
+    style = '',
+    background = '#000000',
+    envMap = null,
+    environment = null,
+    children,
+    ui,
+  }: Props = $props()
 
   const engine = createEngine()
+
+  // Textura cargada por <Environment/> (bindable). Solo se usa si no hay envMap explícito.
+  let loadedEnvTexture: Texture | undefined = $state()
+
+  // Priority: envMap explícito > textura cargada por <Environment/> > null.
+  // El usuario decide entre control fino (Texture pre-construida) o conveniencia
+  // (path al HDR + carga automática).
+  $effect(() => {
+    engine.envMap = envMap ?? loadedEnvTexture ?? null
+  })
 </script>
 
 <div class="essentia-root {className}" {style}>
   <Canvas>
+    <SceneBackground color={background} />
     <OrthoCamera {engine} />
+    <BackgroundCapture />
+    {#if environment && !envMap}
+      <Environment
+        url={environment.url}
+        isBackground={environment.isBackground ?? false}
+        bind:texture={loadedEnvTexture}
+      />
+    {/if}
     {@render children?.()}
   </Canvas>
 

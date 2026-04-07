@@ -40,7 +40,7 @@
     radius = 8,
     color = '#ffffff',
     opacity = 1,
-    softness = 1.5,
+    softness = 0,
     x = 0,
     y = 0,
     z = 0,

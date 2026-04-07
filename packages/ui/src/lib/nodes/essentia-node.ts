@@ -15,6 +15,15 @@ export type Bounds = {
 }
 
 /**
+ * Recurso GPU (geometry, material, render target, textura) que requiere
+ * liberación explícita. Se registra en un EssentiaNode con `addDisposable`
+ * y se libera automáticamente cuando el nodo se destruye.
+ */
+export interface Disposable {
+  dispose(): void
+}
+
+/**
  * Unidad mínima de UI en Essentia.
  *
  * Encapsula uno o más Object3D de Three.js y expone una API de
@@ -28,6 +37,7 @@ export class EssentiaNode {
   private _anchor: Anchor = { x: 0.5, y: 0.5 }
   private _parent: EssentiaNode | null = null
   private _children: EssentiaNode[] = []
+  private _disposables: Disposable[] = []
 
   constructor(root?: Object3D) {
     this.root = root ?? new Object3D()
@@ -55,6 +65,16 @@ export class EssentiaNode {
    */
   setSize(width: number, height: number): this {
     this._bounds = { width, height }
+    return this
+  }
+
+  /**
+   * Registra un recurso GPU para que sea liberado cuando el nodo se destruye.
+   * Geometrías, materiales, texturas y render targets deben registrarse aquí
+   * para evitar fugas de memoria GPU.
+   */
+  addDisposable(disposable: Disposable): this {
+    this._disposables.push(disposable)
     return this
   }
 
@@ -100,10 +120,22 @@ export class EssentiaNode {
 
   /**
    * Destruye el nodo y todos sus hijos.
-   * Se desvincula del padre y libera referencias.
+   * Se desvincula del padre, libera recursos GPU registrados y libera referencias.
+   *
+   * Orden:
+   *   1. Desvincular del padre (saca este subárbol de la escena)
+   *   2. Disponer recursos GPU propios (geometry, material, etc.)
+   *   3. Destruir hijos en cascada (cada hijo libera lo suyo)
    */
   destroy(): void {
     this._parent?.removeChild(this)
+
+    // Liberar recursos GPU propios antes de propagar a hijos
+    for (const d of this._disposables) {
+      d.dispose()
+    }
+    this._disposables = []
+
     // Copia del array porque destroy() muta _children
     for (const child of [...this._children]) {
       child.destroy()

@@ -26,8 +26,14 @@ uniform float u_ior;
 uniform float u_distortion;
 uniform float u_chromatic_aberration;
 
+// Blur (frosted glass). 0 = sin blur. Valor en píxeles de radio de kernel.
+uniform float u_blur;
+
 // Tinte RGBA sobre el fondo refractado
 uniform vec4 u_tint;
+
+// Fresnel: brillo en los bordes del glass
+uniform float u_fresnel_strength;
 
 // Environment map equirectangular (EXR)
 // u_env_intensity = 0.0 → env map desactivado (fallback sin textura)
@@ -40,6 +46,23 @@ varying vec2 v_uv;
 float sdRoundedBox(vec2 p, vec2 b, float r) {
   vec2 q = abs(p) - b + r;
   return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+}
+
+// Kernel Gaussiano 3×3 sobre u_background.
+// px = u_blur / u_resolution (spread por pixel). Con px=(0,0) → resultado = muestra única.
+vec3 sampleBackground(vec2 uv) {
+  vec2 px = u_blur / u_resolution;
+  vec3 c = vec3(0.0);
+  c += texture2D(u_background, uv + vec2(-1.0,-1.0)*px).rgb * 0.0625;
+  c += texture2D(u_background, uv + vec2( 0.0,-1.0)*px).rgb * 0.125;
+  c += texture2D(u_background, uv + vec2( 1.0,-1.0)*px).rgb * 0.0625;
+  c += texture2D(u_background, uv + vec2(-1.0, 0.0)*px).rgb * 0.125;
+  c += texture2D(u_background, uv + vec2( 0.0, 0.0)*px).rgb * 0.25;
+  c += texture2D(u_background, uv + vec2( 1.0, 0.0)*px).rgb * 0.125;
+  c += texture2D(u_background, uv + vec2(-1.0, 1.0)*px).rgb * 0.0625;
+  c += texture2D(u_background, uv + vec2( 0.0, 1.0)*px).rgb * 0.125;
+  c += texture2D(u_background, uv + vec2( 1.0, 1.0)*px).rgb * 0.0625;
+  return c;
 }
 
 // Muestrea un env map equirectangular dado un vector de dirección 3D
@@ -57,7 +80,10 @@ void main() {
   // ── 1. Shape masking via SDF ──────────────────────────────────
   vec2 p = (v_uv - 0.5) * u_size;
   float d = sdRoundedBox(p, u_size * 0.5, u_radius);
-  float alpha = 1.0 - smoothstep(-u_softness, u_softness, d);
+  // fwidth(d): tasa de cambio del SDF por píxel físico → AA exactamente 1px, DPR-aware.
+  // u_softness añade suavidad extra opcional (default 0 = bordes nítidos).
+  float aa = fwidth(d) + u_softness;
+  float alpha = 1.0 - smoothstep(-aa, aa, d);
   if (alpha < 0.001) discard;
 
   // ── 2. Screen-space UV ────────────────────────────────────────
@@ -65,13 +91,16 @@ void main() {
   vec2 toCenter = v_uv - 0.5;
 
   // ── 3. Refracción lens-based ──────────────────────────────────
-  vec2 refractOffset = -toCenter * (u_ior - 1.0) * u_distortion;
+  // Signo positivo: lente divergente — los bordes samplea hacia afuera.
+  // Efecto visual: el contenido detrás aparece ligeramente expandido/distorsionado
+  // sin inversión de imagen, como un vidrio grueso real.
+  vec2 refractOffset = toCenter * (u_ior - 1.0) * u_distortion;
 
-  // ── 4. Aberración cromática ───────────────────────────────────
+  // ── 4. Aberración cromática + blur ───────────────────────────
   float ca = u_chromatic_aberration;
-  float r = texture2D(u_background, screenUV + refractOffset * (1.0 + ca)).r;
-  float g = texture2D(u_background, screenUV + refractOffset).g;
-  float b = texture2D(u_background, screenUV + refractOffset * (1.0 - ca)).b;
+  float r = sampleBackground(screenUV + refractOffset * (1.0 + ca)).r;
+  float g = sampleBackground(screenUV + refractOffset).g;
+  float b = sampleBackground(screenUV + refractOffset * (1.0 - ca)).b;
   vec3 refracted = vec3(r, g, b);
 
   // ── 5. Reflejo del entorno (IBL) ──────────────────────────────
@@ -97,7 +126,7 @@ void main() {
 
   // ── 7. Fresnel edge ───────────────────────────────────────────
   float edgeProximity = 1.0 - smoothstep(0.0, 8.0, -d);
-  refracted += edgeProximity * 0.06;
+  refracted += edgeProximity * u_fresnel_strength;
 
   gl_FragColor = vec4(refracted, alpha);
 }

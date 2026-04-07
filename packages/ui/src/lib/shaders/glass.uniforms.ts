@@ -15,6 +15,10 @@ export type GlassUniforms = {
   u_env_map: IUniform<Texture | null>
   /** Intensidad del reflejo del entorno [0..1]. 0 = desactivado. */
   u_env_intensity: IUniform<number>
+  /** Radio del kernel de blur en píxeles. 0 = sin blur. */
+  u_blur: IUniform<number>
+  /** Intensidad del brillo Fresnel en los bordes. @default 0.06 */
+  u_fresnel_strength: IUniform<number>
 }
 
 export type GlassUniformsParams = {
@@ -34,6 +38,8 @@ export type GlassUniformsParams = {
   background: Texture | null
   envMap?: Texture | null
   envIntensity?: number
+  blur?: number
+  fresnelStrength?: number
 }
 
 export function createGlassUniforms(p: GlassUniformsParams): GlassUniforms {
@@ -49,5 +55,7 @@ export function createGlassUniforms(p: GlassUniformsParams): GlassUniforms {
     u_tint: { value: new Vector4(p.tintR, p.tintG, p.tintB, p.tintA) },
     u_env_map: { value: p.envMap ?? null },
     u_env_intensity: { value: p.envIntensity ?? 0 },
+    u_blur: { value: p.blur ?? 0 },
+    u_fresnel_strength: { value: p.fresnelStrength ?? 0.06 },
   }
 }

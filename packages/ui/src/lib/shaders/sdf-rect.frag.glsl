@@ -28,7 +28,8 @@ void main() {
 
   // Borde suavizado: interior < 0, exterior > 0
   // smoothstep mapea [-softness, softness] → [1, 0]
-  float alpha = 1.0 - smoothstep(-u_softness, u_softness, d);
+  float aa = fwidth(d) + u_softness;
+  float alpha = 1.0 - smoothstep(-aa, aa, d);
 
   gl_FragColor = vec4(u_color.rgb, u_color.a * alpha);
 }

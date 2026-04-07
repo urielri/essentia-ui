@@ -1,5 +1,5 @@
 import { getContext, setContext } from 'svelte'
-import type { OrthographicCamera } from 'three'
+import type { Mesh, OrthographicCamera, Texture, WebGLRenderTarget } from 'three'
 
 const ENGINE_KEY = Symbol('essentia-engine')
 
@@ -20,6 +20,16 @@ export class Engine {
   viewport: Viewport = $state({ width: 0, height: 0, dpr: 1 })
   tick: number = $state(0)
   camera: OrthographicCamera | null = $state(null)
+  /** Textura de entorno compartida por toda la escena. Asignada por EssentiaRoot. */
+  envMap: Texture | null = $state(null)
+  /** RenderTarget compartido de captura de fondo. Asignado por BackgroundCapture. */
+  backgroundTarget: WebGLRenderTarget | null = $state(null)
+  /**
+   * Registro de meshes Glass activos en escena.
+   * BackgroundCapture los oculta durante la captura para que no aparezcan en su propio fondo.
+   * No es $state — no necesita reactividad, es un Set mutable de referencias.
+   */
+  glassMeshes: Set<Mesh> = new Set()
 }
 
 export function createEngine(): Engine {

@@ -144,3 +144,47 @@ describe('EssentiaNode — destroy', () => {
     expect(() => node.destroy()).not.toThrow()
   })
 })
+
+describe('EssentiaNode — disposables', () => {
+  it('addDisposable es chainable', () => {
+    const node = new EssentiaNode()
+    const result = node.addDisposable({ dispose: () => {} })
+    expect(result).toBe(node)
+  })
+
+  it('destroy() invoca dispose() en todos los disposables', () => {
+    const node = new EssentiaNode()
+    const a = { dispose: vi.fn() }
+    const b = { dispose: vi.fn() }
+    node.addDisposable(a).addDisposable(b)
+
+    node.destroy()
+
+    expect(a.dispose).toHaveBeenCalledTimes(1)
+    expect(b.dispose).toHaveBeenCalledTimes(1)
+  })
+
+  it('destroy() ejecuta disposables propios antes de destruir hijos', () => {
+    const calls: string[] = []
+    const parent = new EssentiaNode()
+    const child = new EssentiaNode()
+    parent.addChild(child)
+    parent.addDisposable({ dispose: () => calls.push('parent') })
+    child.addDisposable({ dispose: () => calls.push('child') })
+
+    parent.destroy()
+
+    expect(calls).toEqual(['parent', 'child'])
+  })
+
+  it('destroy() no vuelve a invocar disposables si se llama dos veces', () => {
+    const node = new EssentiaNode()
+    const d = { dispose: vi.fn() }
+    node.addDisposable(d)
+
+    node.destroy()
+    node.destroy()
+
+    expect(d.dispose).toHaveBeenCalledTimes(1)
+  })
+})
