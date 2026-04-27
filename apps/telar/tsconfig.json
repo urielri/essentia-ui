@@ -19,7 +19,7 @@
       "#hooks/*": ["./hooks/*"],
       "#utils": ["./components/utils/index.ts"],
       "#actions/*": ["./app/actions/*"],
-      "#components/*": ["../../packages/ui/components/*"],
+      "#components/*": ["../../packages/ui-deprecated/components/*"],
       "#flows/*": ["./components/flows/*"]
     }
   },

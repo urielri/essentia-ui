@@ -1,0 +1,28 @@
+<script lang="ts">
+  // En SvelteKit, useRouter/usePathname se reemplazan por 'goto' y 'page' store
+  // Si no usas SvelteKit, estas son funciones que tendrías que inyectar
+  import { goto } from "$app/navigation";
+  import { page } from "$app/stores";
+
+  import Item from "./item.svelte";
+  import type { ComponentType } from "svelte"; // Tipo para componentes Svelte
+
+  export let icon: ComponentType;
+  export let label: string | undefined = undefined;
+  export let style: string | undefined = undefined;
+  export let ariaLabel: string;
+  export let path: string | undefined = undefined;
+
+  // 1. REACTIVIDAD SVELTE: Calcula 'selected' reactivamente
+  // Svelte automáticamente re-evaluará 'selected' cuando '$page.url.pathname' cambie.
+  $: selected = $page.url.pathname.includes(path ?? "");
+
+  // 2. FUNCIÓN DE NAVEGACIÓN
+  const navigate = () => {
+    if (path) {
+      goto(path);
+    }
+  };
+</script>
+
+<Item {ariaLabel} {label} {icon} {style} {selected} onClick={navigate} />

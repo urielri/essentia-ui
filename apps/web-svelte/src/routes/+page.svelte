@@ -1,107 +1,159 @@
 <script lang="ts">
-  import { EssentiaRoot, Rect, Glass } from 'essentia/ui'
-  import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
-  import type { Texture } from 'three'
+  import { EssentiaRoot, Rect, Glass } from "essentia/ui";
+  import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+  import type { Texture } from "three";
 
   // URL resuelta por Vite desde el alias #hdr → packages/ui/src/hdr_envs/
-  import monochromeUrl from '#hdr/monochrome_1k.hdr?url'
+  import monochromeUrl from "#hdr/monochrome_1k.hdr?url";
 
-  let envTexture: Texture | null = $state(null)
-  let loading = $state(false)
+  let envTexture: Texture | null = $state(null);
+  let loading = $state(false);
+
+  // Cursor en coordenadas de mundo (origin = centro, 1 unidad = 1 px CSS)
+  let cursorX = $state(0);
+  let cursorY = $state(0);
+
+  function onMouseMove(e: MouseEvent) {
+    cursorX = e.clientX - window.innerWidth / 2;
+    cursorY = -(e.clientY - window.innerHeight / 2);
+  }
 
   function loadEnv() {
-    loading = true
+    loading = true;
     new RGBELoader().load(monochromeUrl, (tex) => {
-      envTexture = tex
-      loading = false
-    })
+      envTexture = tex;
+      loading = false;
+    });
   }
 </script>
 
-<div class="stage">
-  <EssentiaRoot envMap={envTexture}>
-
+<div class="stage" onmousemove={onMouseMove}>
+  <EssentiaRoot background="#d1d1d1" envMap={envTexture}>
     <!--
       ── Fondo — capa de rects (z = 0) ────────────────────────────
       Estos rects son el "contenido" que el glass va a refractar.
     -->
 
-    <!-- Grid de colores distribuido en el fondo -->
-    <Rect width={160} height={160} radius={20} color="#6c63ff" x={-300} y={160}  />
-    <Rect width={160} height={160} radius={20} color="#ff6584" x={-120} y={160}  />
-    <Rect width={160} height={160} radius={20} color="#43c6ac" x={60}   y={160}  />
-    <Rect width={160} height={160} radius={20} color="#f8b500" x={240}  y={160}  />
+    <!-- ── Fondo ─────────────────────────────────────────────────── -->
 
-    <Rect width={160} height={160} radius={80} color="#e8c3f8" x={-300} y={-20}  />
-    <Rect width={160} height={160} radius={80} color="#ff6584" x={-120} y={-20}  />
-    <Rect width={160} height={160} radius={80} color="#43c6ac" x={60}   y={-20}  />
-    <Rect width={160} height={160} radius={80} color="#6c63ff" x={240}  y={-20}  />
+    <!-- Dos rects grandes con Glass en el medio -->
+    <Rect
+      width={220}
+      height={220}
+      radius={24}
+      color="#6c63ff"
+      x={-180}
+      y={160}
+    />
+    <Rect
+      width={220}
+      height={220}
+      radius={24}
+      color="#ff6584"
+      x={180}
+      y={160}
+    />
 
-    <Rect width={160} height={160} radius={0}  color="#f8b500" x={-300} y={-200} />
-    <Rect width={160} height={160} radius={0}  color="#6c63ff" x={-120} y={-200} />
-    <Rect width={160} height={160} radius={0}  color="#e8c3f8" x={60}   y={-200} />
-    <Rect width={160} height={160} radius={0}  color="#ff6584" x={240}  y={-200} />
+    <!-- Grid de círculos -->
+    <Rect
+      width={140}
+      height={140}
+      radius={70}
+      color="#43c6ac"
+      x={-300}
+      y={-60}
+    />
+    <Rect
+      width={140}
+      height={140}
+      radius={70}
+      color="#f8b500"
+      x={-120}
+      y={-60}
+    />
+    <Rect width={140} height={140} radius={70} color="#e8c3f8" x={60} y={-60} />
+    <Rect
+      width={140}
+      height={140}
+      radius={70}
+      color="#ff6584"
+      x={240}
+      y={-60}
+    />
 
-    <!--
-      ── Fase 3: Glass (z = 1, delante del fondo) ──────────────────
-      El glass captura lo que hay detrás y aplica refracción IOR.
+    <!-- Franja horizontal de rectángulos pequeños -->
+    <Rect width={80} height={80} radius={8} color="#f8b500" x={-280} y={-220} />
+    <Rect width={80} height={80} radius={8} color="#43c6ac" x={-180} y={-220} />
+    <Rect width={80} height={80} radius={8} color="#6c63ff" x={-80} y={-220} />
+    <Rect width={80} height={80} radius={8} color="#e8c3f8" x={20} y={-220} />
+    <Rect width={80} height={80} radius={8} color="#ff6584" x={120} y={-220} />
+    <Rect width={80} height={80} radius={8} color="#6c63ff" x={220} y={-220} />
 
-      Variaciones de izquierda a derecha:
-        - IOR y distortion crecientes
-        - Aberración cromática creciente
-        - Con tinte sutil
-    -->
+    <!-- ── Glass ───────────────────────────────────────────────── -->
 
-    <!-- Fila superior: variaciones de IOR — con env map -->
-    <Glass width={140} height={60} radius={14}
-      ior={1.1} distortion={0.2} chromaticAberration={0}
-      envIntensity={0.4} x={-240} y={80} z={1} />
+    <!-- Glass entre los dos rects grandes (cruza los dos colores) -->
+    <Glass
+      width={260}
+      height={70}
+      radius={999}
+      ior={1.4}
+      distortion={0.35}
+      chromaticAberration={0.02}
+      x={0}
+      y={160}
+      z={1}
+    />
 
-    <Glass width={140} height={60} radius={14}
-      ior={1.3} distortion={0.3} chromaticAberration={0.01}
-      envIntensity={0.4} x={-80} y={80} z={1} />
+    <!-- Glass sobre la fila de círculos -->
+    <Glass
+      width={340}
+      height={60}
+      radius={14}
+      ior={1.3}
+      distortion={0.25}
+      chromaticAberration={0.01}
+      x={-30}
+      y={-60}
+      z={1}
+    />
 
-    <Glass width={140} height={60} radius={14}
-      ior={1.5} distortion={0.4} chromaticAberration={0.02}
-      envIntensity={0.4} x={80} y={80} z={1} />
+    <!-- Glass pequeño con tinte -->
+    <Glass
+      width={140}
+      height={140}
+      radius={24}
+      ior={1.5}
+      distortion={0.4}
+      chromaticAberration={0.025}
+      tint="#6c63ff"
+      tintOpacity={0.12}
+      x={320}
+      y={160}
+      z={1}
+    />
 
-    <Glass width={140} height={60} radius={14}
-      ior={1.8} distortion={0.5} chromaticAberration={0.04}
-      envIntensity={0.4} x={240} y={80} z={1} />
-
-    <!-- Fila central: glass con tinte -->
-    <Glass width={140} height={60} radius={999}
-      ior={1.4} distortion={0.3} chromaticAberration={0.015}
-      tint="#6c63ff" tintOpacity={0.15}
-      envIntensity={0.3} x={-240} y={-20} z={1} />
-
-    <Glass width={140} height={60} radius={999}
-      ior={1.4} distortion={0.3} chromaticAberration={0.015}
-      tint="#ff6584" tintOpacity={0.15}
-      envIntensity={0.3} x={-80} y={-20} z={1} />
-
-    <Glass width={140} height={60} radius={999}
-      ior={1.4} distortion={0.3} chromaticAberration={0.015}
-      tint="#43c6ac" tintOpacity={0.15}
-      envIntensity={0.3} x={80} y={-20} z={1} />
-
-    <Glass width={140} height={60} radius={999}
-      ior={1.4} distortion={0.3} chromaticAberration={0.015}
-      tint="#f8b500" tintOpacity={0.15}
-      envIntensity={0.3} x={240} y={-20} z={1} />
-
-    <!-- Panel grande -->
-    <Glass width={360} height={100} radius={20}
-      ior={1.4} distortion={0.25} chromaticAberration={0.02}
-      envIntensity={0.5} x={-60} y={-160} z={1} />
-
+    <!-- Glass sobre la franja de cuadrados — panel largo -->
+    <Glass
+      width={400}
+      height={50}
+      radius={10}
+      ior={1.35}
+      distortion={0.05}
+      chromaticAberration={0.015}
+      x={cursorX}
+      y={cursorY}
+      z={1}
+    />
+    <!-- Glass que sigue al cursor -->
   </EssentiaRoot>
 </div>
 
 <div class="controls">
   <button onclick={loadEnv} disabled={loading || !!envTexture}>
-    {loading ? 'loading…' : envTexture ? 'env loaded' : 'load env'}
+    {loading ? "loading…" : envTexture ? "env loaded" : "load env"}
   </button>
+  <a href="/product">product demo →</a>
+  <a href="/playground">playground →</a>
 </div>
 
 <style>
@@ -109,7 +161,7 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background: #08080f;
+    background: #0f0f1a;
   }
 
   .stage {
@@ -140,5 +192,17 @@
 
   .controls button:hover {
     background: rgba(255, 255, 255, 0.14);
+  }
+
+  .controls a {
+    color: rgba(255, 255, 255, 0.4);
+    text-decoration: none;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    margin-left: 16px;
+  }
+
+  .controls a:hover {
+    color: rgba(255, 255, 255, 0.8);
   }
 </style>
