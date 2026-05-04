@@ -3,7 +3,7 @@ import type { Texture } from 'three'
 import vertexShader from '../shaders/glass.vert.glsl'
 import fragmentShader from '../shaders/glass.frag.glsl'
 import { createGlassUniforms, type GlassUniforms } from '../shaders/glass.uniforms.js'
-import { EssentiaNode } from './essentia-node.js'
+import { EssentiaNode } from 'essentia-core'
 
 /**
  * Opciones de construcción del GlassNode.

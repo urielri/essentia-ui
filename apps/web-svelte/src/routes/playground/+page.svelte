@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { GlassPlayground } from 'essentia/ui'
+  import GlassPlayground from './glass-playground.svelte'
 </script>
 
 <div class="page">

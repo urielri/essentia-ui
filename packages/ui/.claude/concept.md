@@ -1,89 +1,57 @@
 ---
 name: Essentia UI — Concept
-description: Modelo mental y arquitectura del proyecto
+description: Modelo mental de la capa de componentes structurales y layout
 ---
 
 # Concept
 
-## ¿Qué es Essentia?
+`essentia-ui` es la **capa estructural** del stack: componentes higher-level
+que componen primitivas de `essentia-styles` dentro de jerarquías de
+contenido y orquestan layout.
 
-Un framework GPU-first para construir **aplicaciones** (no páginas, no juegos) con interfaces renderizadas íntegramente en la GPU. El DOM no es la superficie de renderizado — es una capa de soporte para accesibilidad y eventos nativos.
+## Estado actual
 
-El stack es: **Svelte 5 → Threlte → Three.js → WebGPU / WebGL 2**
+Por ahora solo provee la **capa de layout** (re-exports de `@threlte/flex`
++ `Align`). Los componentes higher-level (Button, Card, Input) llegan en
+fases siguientes.
 
----
+## Layout: Flex/Box (Yoga)
 
-## La unidad mínima: EssentiaNode
+La capa de layout es **opcional**. Coexiste con el sistema absoluto de
+`essentia-core` (anchoring/setPosition):
 
-La unidad atómica de UI no es un `div` ni un `Mesh` directo. Es un **`EssentiaNode`**: una abstracción propia que:
+- **Path A (absoluto)**: `<Glass x={..} y={..} {width} {height} />` — control
+  fino, world space directo.
+- **Path B (declarativo)**: `<Flex><Box flex={1}><Glass /></Box></Flex>` —
+  layout reactivo, responde a resize y reflow.
 
-- Envuelve uno o más `Object3D` de Three.js
-- Expone una API de alto nivel: bounds, anchoring, transform
-- Gestiona su propio ciclo de vida dentro del scene graph
-- Hereda transformaciones del padre de forma eficiente en GPU
+Yoga compone constraints → outputs `(x, y, w, h)` por nodo. NO es box model
+CSS — es un solver de constraints. La regla "no DOM como superficie de
+render" no se viola.
 
-Analogía: como un `VisualElement` de Unity UI Toolkit pero sobre Three.js, o como un "frame" de Figma pero en 3D.
+## Higher-level components (futuro)
 
----
+Cuando se agreguen Button/Card/Input, seguirán este patrón:
 
-## World Space Layout
+- **Composición**: combinan primitivas de `essentia-styles` (Glass + Text,
+  Image + Rect, etc.) más layout (`<Box>`).
+- **Sin estado oculto**: la fuente de verdad sigue siendo los props.
+- **Dependencias**: pueden depender de `essentia-styles` y `essentia-core`.
 
-No existe box model. No existe flujo de caja CSS.
+## Filosofía
 
-El layout es un sistema de **transformaciones matriciales** con:
+`essentia-ui` mantiene **separación entre estructura y estilo**:
 
-- **Cámara ortográfica 1:1** — 1 unidad de mundo = 1 píxel de pantalla
-- **Anchoring system** — los nodos se anclan a su padre o al viewport
-- **Responsive via viewport events** — el canvas reacciona a resize y recalcula transforms
+```
+ui (estructura)     →    Button, Card, Input, Flex, Box
+                              │
+                              ▼
+styles (estilo)     →    Glass, Rect, Image, Text
+                              │
+                              ▼
+core (runtime)      →    EssentiaRoot, EssentiaNode, useEngine
+```
 
----
-
-## Estética: Liquid Glass PBR
-
-Las formas no son geometría poligonal burda. Son:
-
-- **SDF (Signed Distance Fields)** — rectángulos, círculos y bordes suaves calculados en shader, infinitamente precisos
-- **Refracción dinámica** — pipeline multi-pasada que captura el framebuffer de fondo para calcular distorsión lumínica real con IOR
-- **Materiales PBR** — normal maps, environment maps (IBL), roughness/metalness
-- **Postprocesado** — blur (Kawase), chromatic aberration, depth of field cuando aplique
-
----
-
-## Tipografía: MSDF
-
-El texto es un objeto físico en el espacio 3D, no una capa HTML superpuesta.
-
-- Generación de atlas: `msdf-atlas-gen`
-- Renderizado: componente `Text` de `@threlte/extras`
-- Resultado: glifos infinitamente nítidos a cualquier escala, con iluminación y refracción aplicables
-
----
-
-## Accesibilidad: Hybrid Bridge
-
-Para no romper SEO ni screen readers:
-
-- **Shadow Layer** — DOM HTML invisible generado vía SSR/SSG, sincronizado en tiempo real con el estado del canvas
-- **Ghost Inputs** — elementos `<input>` reales ocultos que gestionan foco, clipboard y teclados virtuales. La interactividad se proyecta al engine gráfico
-
----
-
-## Stack tecnológico
-
-| Capa | Tecnología | Rol |
-|---|---|---|
-| Reactividad | Svelte 5 (Runes) | Estado, ciclo de vida, componentes |
-| Engine | Three.js ^0.180 | Core de renderizado |
-| Abstracción | Threlte ^8 | Orquestación de componentes y lifecycle |
-| Física / Input | @threlte/rapier | Raycasting para eventos + física |
-| Shaders | GLSL / WGSL | SDF, PBR, refracción, postprocesado |
-| Tipografía | msdf-atlas-gen + @threlte/extras Text | Texto vectorial en GPU |
-| Shader bundling | vite-plugin-glsl | Importar .glsl como módulos con HMR |
-| Tests | Vitest | Solo para core (store, graph, math) |
-
----
-
-## Decisiones pendientes (TBD)
-
-- **Relación componente Svelte ↔ mesh(es):** a definir con criterio de performance. Un componente puede orquestar múltiples meshes.
-- **Escena vs Layout:** si el "layout" es la escena completa o si hay separación entre escena de fondo y escena de UI.
+Cada capa solo conoce las que están debajo. Si un consumidor solo necesita
+runtime, usa `essentia-core`. Si quiere primitivas visuales sin layout,
+usa `essentia-core + essentia-styles`. Layer composable.

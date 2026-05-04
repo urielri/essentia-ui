@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { EssentiaRoot } from 'essentia/ui'
+  import { EssentiaRoot } from 'essentia-core'
   import Scene from './scene.svelte'
 </script>
 

@@ -2,6 +2,8 @@
 
 Lee estos archivos antes de cualquier tarea:
 
-- [Soul](.claude/soul.md) — postura y personalidad
-- [Concept](.claude/concept.md) — modelo mental y arquitectura
-- [Rules](.claude/rules.md) — convenciones y restricciones
+- [Concept](.claude/concept.md) — modelo mental: structural components y layout
+
+Este paquete es la capa estructural superior. Puede depender de
+[`essentia-core`](../core/) y [`essentia-styles`](../styles/), pero no al
+revés. Flujo: `ui → styles → core`.

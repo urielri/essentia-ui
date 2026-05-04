@@ -1,7 +1,6 @@
 <script lang="ts">
-  import EssentiaRoot from './essentia-root.svelte'
-  import Rect from './rect.svelte'
-  import Glass from './glass.svelte'
+  import { EssentiaRoot } from 'essentia-core'
+  import { Rect, Glass } from 'essentia-styles'
 
   // ── Estado de los controles ────────────────────────────────────
   let width            = $state(260)

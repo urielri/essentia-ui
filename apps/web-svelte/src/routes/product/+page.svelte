@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { EssentiaRoot, Image, Glass } from "essentia/ui";
+  import { EssentiaRoot } from "essentia-core";
+  import { Image, Glass } from "essentia-styles";
 
   let vw = $state(typeof window !== "undefined" ? window.innerWidth : 1280);
   let vh = $state(typeof window !== "undefined" ? window.innerHeight : 800);

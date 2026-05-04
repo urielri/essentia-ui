@@ -3,7 +3,7 @@
   import { useCursor } from '@threlte/extras'
   import type { InteractivityProps } from '@threlte/extras'
   import { GlassNode } from '../nodes/glass-node.js'
-  import { useEngine } from '../core/engine.svelte.js'
+  import { useEngine } from 'essentia-core'
 
   interface Props {
     width: number

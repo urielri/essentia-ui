@@ -1,16 +1,9 @@
 <script lang="ts">
-  // Imports unificados desde essentia/ui — un solo import surface.
-  // Internamente Flex/Box/tailwindParser vienen de @threlte/flex y
-  // Align viene de @threlte/extras, pero el consumidor no necesita saberlo.
-  import {
-    Rect,
-    Glass,
-    Flex,
-    Box,
-    Align,
-    tailwindParser,
-    useEngine,
-  } from 'essentia/ui'
+  // Imports separados por capa: core (runtime), styles (visual primitives),
+  // ui (layout). Cada paquete expone una responsabilidad ortogonal.
+  import { useEngine } from 'essentia-core'
+  import { Rect, Glass } from 'essentia-styles'
+  import { Flex, Box, Align, tailwindParser } from 'essentia-ui'
 
   const engine = useEngine()
 

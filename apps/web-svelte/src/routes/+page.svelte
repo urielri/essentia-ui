@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { EssentiaRoot, Rect, Glass } from "essentia/ui";
+  import { EssentiaRoot } from "essentia-core";
+  import { Rect, Glass } from "essentia-styles";
   import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
   import type { Texture } from "three";
 
