@@ -9,6 +9,12 @@
   let envTexture: Texture | null = $state(null);
   let loading = $state(false);
 
+  // Intensidad reactiva del env map. Cuando envTexture está cargado, los
+  // Glass muestran el reflejo IBL; sin textura, intensity=0 → sin contribución.
+  // El shader gatea el efecto con `u_env_intensity` — sin esta binding,
+  // cargar el env no tiene efecto visual.
+  const envIntensity = $derived(envTexture ? 0.3 : 0);
+
   // Cursor en coordenadas de mundo (origin = centro, 1 unidad = 1 px CSS)
   let cursorX = $state(0);
   let cursorY = $state(0);
@@ -20,10 +26,18 @@
 
   function loadEnv() {
     loading = true;
-    new RGBELoader().load(monochromeUrl, (tex) => {
-      envTexture = tex;
-      loading = false;
-    });
+    new RGBELoader().load(
+      monochromeUrl,
+      (tex) => {
+        envTexture = tex;
+        loading = false;
+      },
+      undefined,
+      (err) => {
+        console.error("[loadEnv] RGBELoader error:", err);
+        loading = false;
+      },
+    );
   }
 </script>
 
@@ -99,6 +113,7 @@
       ior={1.4}
       distortion={0.35}
       chromaticAberration={0.02}
+      {envIntensity}
       x={0}
       y={160}
       z={1}
@@ -112,6 +127,7 @@
       ior={1.3}
       distortion={0.25}
       chromaticAberration={0.01}
+      {envIntensity}
       x={-30}
       y={-60}
       z={1}
@@ -127,6 +143,7 @@
       chromaticAberration={0.025}
       tint="#6c63ff"
       tintOpacity={0.12}
+      {envIntensity}
       x={320}
       y={160}
       z={1}
@@ -140,6 +157,7 @@
       ior={1.35}
       distortion={0.05}
       chromaticAberration={0.015}
+      {envIntensity}
       x={cursorX}
       y={cursorY}
       z={1}
@@ -154,6 +172,7 @@
   </button>
   <a href="/product">product demo →</a>
   <a href="/playground">playground →</a>
+  <a href="/flex-demo">flex demo →</a>
 </div>
 
 <style>
