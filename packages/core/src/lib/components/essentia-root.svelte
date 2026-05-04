@@ -2,10 +2,11 @@
   import type { Snippet } from 'svelte'
   import type { Texture } from 'three'
   import { Canvas } from '@threlte/core'
-  import { Environment } from '@threlte/extras'
+  import { Environment, Suspense } from '@threlte/extras'
   import OrthoCamera from '../core/ortho-camera.svelte'
   import BackgroundCapture from '../core/background-capture.svelte'
   import SceneBackground from '../core/scene-background.svelte'
+  import Interactivity from '../core/interactivity.svelte'
   import { createEngine } from '../core/engine.svelte.js'
   import type { EnvironmentOptions } from './essentia-root.types.js'
 
@@ -25,6 +26,17 @@
      * `<Environment/>`. Se ignora si `envMap` está presente.
      */
     environment?: EnvironmentOptions | null
+    /**
+     * Snippet de fallback (3D) que se renderiza dentro del Canvas mientras
+     * cualquier descendiente está cargando recursos asíncronos (texturas vía
+     * `<Image/>`, environment maps, etc.).
+     *
+     * Si está presente, los `children` se envuelven en `<Suspense>` y este
+     * snippet sustituye el contenido durante la carga. Si no se provee, no hay
+     * orquestación de Suspense — los componentes aparecen apenas su recurso
+     * propio termina de cargar (sin coordinación global).
+     */
+    loading?: Snippet
     children?: Snippet
     ui?: Snippet
   }
@@ -35,6 +47,7 @@
     background = '#000000',
     envMap = null,
     environment = null,
+    loading,
     children,
     ui,
   }: Props = $props()
@@ -57,14 +70,22 @@
     <SceneBackground color={background} />
     <OrthoCamera {engine} />
     <BackgroundCapture />
-    {#if environment && !envMap}
-      <Environment
-        url={environment.url}
-        isBackground={environment.isBackground ?? false}
-        bind:texture={loadedEnvTexture}
-      />
-    {/if}
-    {@render children?.()}
+    <Interactivity>
+      {#if environment && !envMap}
+        <Environment
+          url={environment.url}
+          isBackground={environment.isBackground ?? false}
+          bind:texture={loadedEnvTexture}
+        />
+      {/if}
+      {#if loading}
+        <Suspense fallback={loading}>
+          {@render children?.()}
+        </Suspense>
+      {:else}
+        {@render children?.()}
+      {/if}
+    </Interactivity>
   </Canvas>
 
   {#if ui}

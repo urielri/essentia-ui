@@ -1,7 +1,9 @@
 <script lang="ts">
   import { T, useThrelte } from '@threlte/core'
+  import { useCursor } from '@threlte/extras'
+  import type { InteractivityProps } from '@threlte/extras'
   import { GlassNode } from '../nodes/glass-node.js'
-  import { useEngine } from '../core/engine.svelte.js'
+  import { useEngine } from 'essentia-core'
 
   interface Props {
     width: number
@@ -37,6 +39,24 @@
     x?: number
     y?: number
     z?: number
+    /**
+     * CSS cursor a aplicar mientras el puntero está sobre el Glass.
+     * Si se provee, activa automáticamente el bridge DOM via `useCursor`.
+     * Ej: 'pointer', 'text', 'grab'. @default undefined (sin cambio)
+     */
+    cursor?: string
+    /** Click sobre el Glass (raycast). */
+    onclick?: InteractivityProps['onclick']
+    /** Pointer entra al área del Glass. */
+    onpointerenter?: InteractivityProps['onpointerenter']
+    /** Pointer sale del área del Glass. */
+    onpointerleave?: InteractivityProps['onpointerleave']
+    /** Pointer se mueve dentro del Glass. */
+    onpointermove?: InteractivityProps['onpointermove']
+    /** Pointer down sobre el Glass. */
+    onpointerdown?: InteractivityProps['onpointerdown']
+    /** Pointer up sobre el Glass. */
+    onpointerup?: InteractivityProps['onpointerup']
   }
 
   let {
@@ -55,7 +75,19 @@
     x = 0,
     y = 0,
     z = 0,
+    cursor,
+    onclick,
+    onpointerenter,
+    onpointerleave,
+    onpointermove,
+    onpointerdown,
+    onpointerup,
   }: Props = $props()
+
+  // Bridge DOM cursor: solo se inicializa si el usuario opt-in vía `cursor`.
+  // Devuelve handlers de enter/leave que se composen con los del usuario.
+  // Llamada condicional aceptable en Svelte 5 (no hay rules-of-hooks como React).
+  const cursorHook = cursor !== undefined ? useCursor(cursor, 'auto') : null
 
   const { invalidate } = useThrelte()
   const engine = useEngine()
@@ -120,6 +152,38 @@
       node.destroy()
     }
   })
+
+  // Composición: si hay cursorHook, llamamos enter/leave del hook además del
+  // handler del usuario. El hook actualiza document.body.style.cursor.
+  function handlePointerEnter(
+    e: Parameters<NonNullable<InteractivityProps['onpointerenter']>>[0],
+  ) {
+    cursorHook?.onPointerEnter()
+    onpointerenter?.(e)
+  }
+
+  function handlePointerLeave(
+    e: Parameters<NonNullable<InteractivityProps['onpointerleave']>>[0],
+  ) {
+    cursorHook?.onPointerLeave()
+    onpointerleave?.(e)
+  }
 </script>
 
-<T is={node.root} />
+<!--
+  Envolvemos `node.root` en un `<T.Group>` para que los handlers de
+  interactividad se registren correctamente con el plugin de @threlte/extras.
+  El patrón `<T is={existing_obj} onclick={...}>` no propaga handlers en
+  todas las versiones — el Group sí se registra siempre, y el raycaster
+  bubblea desde el mesh hijo.
+-->
+<T.Group
+  {onclick}
+  onpointerenter={handlePointerEnter}
+  onpointerleave={handlePointerLeave}
+  {onpointermove}
+  {onpointerdown}
+  {onpointerup}
+>
+  <T is={node.root} />
+</T.Group>

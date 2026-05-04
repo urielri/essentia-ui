@@ -28,7 +28,9 @@
     }
   },
   "dependencies": {
-    "essentia": "*",
+    "essentia-core": "*",
+    "essentia-styles": "*",
+    "essentia-ui": "*",
     "@threlte/core": "^8.1.5",
     "three": "^0.180.0"
   },

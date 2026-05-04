@@ -1,12 +1,10 @@
 <script lang="ts">
-  import { T, useThrelte } from '@threlte/core'
-  import { PlaneGeometry, ShaderMaterial, TextureLoader } from 'three'
-  import type { Mesh, Texture } from 'three'
+  import { T, useLoader, useThrelte } from '@threlte/core'
+  import { useSuspense } from '@threlte/extras'
+  import { PlaneGeometry, ShaderMaterial, TextureLoader, Vector2 } from 'three'
+  import type { IUniform, Mesh, Texture } from 'three'
   import vertexShader from '../shaders/sdf-rect.vert.glsl'
   import fragmentShader from '../shaders/image.frag.glsl'
-  import type { IUniform } from 'three'
-  import { Vector2 } from 'three'
-  import { useEngine } from '../core/engine.svelte.js'
 
   interface Props {
     /** URL de la imagen. Puede ser una ruta relativa, absoluta o import de Vite. */
@@ -36,8 +34,15 @@
     z = 0,
   }: Props = $props()
 
-  const { invalidate } = useThrelte()
-  const engine = useEngine()
+  const { invalidate, renderer } = useThrelte()
+
+  // Loader compartido de TextureLoader. useLoader cachea por URL — si dos
+  // <Image src="x"/> usan el mismo path, comparten la misma Texture en GPU.
+  const loader = useLoader(TextureLoader)
+
+  // Hook de Suspense: si el componente está dentro de un <Suspense> (ej. via
+  // EssentiaRoot.loading), suspend() hace que el padre espere la carga.
+  const suspend = useSuspense()
 
   const geometry = new PlaneGeometry(1, 1)
 
@@ -65,12 +70,29 @@
     depthWrite: false,
   })
 
-  // Cargar textura cuando cambia src
+  // Carga reactiva de la textura. Reacciona a cambios de `src`:
+  // - Si el src cambia, suscribimos a un nuevo store cacheado.
+  // - colorSpace correcto vía transform (output del renderer).
+  // - Cleanup: unsub. NO disponemos la Texture porque es propiedad del cache
+  //   compartido — disponer aquí rompería otros <Image/> con el mismo src.
   $effect(() => {
-    new TextureLoader().load(src, (tex) => {
-      uniforms.u_texture.value = tex
-      invalidate()
+    const store = loader.load(src, {
+      transform: (tex) => {
+        tex.colorSpace = renderer.outputColorSpace
+        tex.needsUpdate = true
+        return tex
+      },
     })
+
+    // Participar en Suspense: AsyncWritable es Promise-like.
+    suspend(store as unknown as Promise<unknown>)
+
+    const unsub = store.subscribe((tex) => {
+      uniforms.u_texture.value = tex ?? null
+      if (tex) invalidate()
+    })
+
+    return unsub
   })
 
   let mesh: Mesh | undefined = $state()
@@ -89,11 +111,12 @@
     invalidate()
   })
 
+  // Cleanup: solo recursos propios (geometry, material). La textura vive en
+  // el cache de useLoader y se libera cuando el cache se invalide.
   $effect(() => {
     return () => {
       geometry.dispose()
       material.dispose()
-      uniforms.u_texture.value?.dispose()
     }
   })
 </script>

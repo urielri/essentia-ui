@@ -11,7 +11,11 @@
     "declarationMap": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "$lib": ["./src/lib"],
+      "$lib/*": ["./src/lib/*"]
+    }
   },
-  "include": ["src/**/*.ts", "src/**/*.svelte"]
+  "include": ["src/**/*.ts", "src/**/*.svelte", "vite.config.ts"]
 }

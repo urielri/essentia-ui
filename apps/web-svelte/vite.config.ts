@@ -24,13 +24,13 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    exclude: ["essentia"],
+    exclude: ["essentia-core", "essentia-styles", "essentia-ui"],
   },
   resolve: {
     dedupe: ["svelte", "three", "@threlte/core"],
     alias: {
-      // Acceso directo a los archivos HDR/EXR del paquete ui
-      "#hdr": path.resolve(__dirname, "../../packages/ui/src/hdr_envs"),
+      // Acceso directo a los archivos HDR/EXR del paquete core (assets de demo)
+      "#hdr": path.resolve(__dirname, "../../packages/core/src/hdr_envs"),
     },
   },
 });

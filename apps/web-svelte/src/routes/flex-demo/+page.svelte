@@ -1,13 +1,17 @@
 <script lang="ts">
-  import GlassPlayground from './glass-playground.svelte'
+  import { EssentiaRoot } from 'essentia-core'
+  import Scene from './scene.svelte'
 </script>
 
 <div class="page">
-  <GlassPlayground />
+  <EssentiaRoot background="#0c0c14">
+    <Scene />
+  </EssentiaRoot>
 </div>
 
 <nav>
   <a href="/">← demo</a>
+  <span class="title">flex demo</span>
 </nav>
 
 <style>
@@ -15,7 +19,7 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background: #111118;
+    background: #0c0c14;
   }
 
   .page {
@@ -28,6 +32,9 @@
     top: 20px;
     left: 24px;
     z-index: 10;
+    display: flex;
+    gap: 16px;
+    align-items: center;
   }
 
   nav a {
@@ -39,5 +46,12 @@
 
   nav a:hover {
     color: rgba(255, 255, 255, 0.8);
+  }
+
+  .title {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
   }
 </style>
