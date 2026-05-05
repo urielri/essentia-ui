@@ -1,72 +1,101 @@
 ---
-name: Essentia UI — Concept
-description: Modelo mental y arquitectura del proyecto
+name: Essentia Core — Concept
+description: Modelo mental del runtime / engine. Capa más baja del stack 3-layer.
 ---
 
 # Concept
 
-## ¿Qué es Essentia?
+`essentia-core` es la **capa runtime** del stack Essentia. Provee el engine,
+el scene graph, el viewport, la cámara y la abstracción base `EssentiaNode`.
+NO contiene primitivas visuales (shaders/materiales) — eso vive en
+`essentia-styles`. NO contiene componentes structurales (Flex/Box/Button) —
+eso vive en `essentia-ui`.
 
-Un framework GPU-first para construir **aplicaciones** (no páginas, no juegos) con interfaces renderizadas íntegramente en la GPU. El DOM no es la superficie de renderizado — es una capa de soporte para accesibilidad y eventos nativos.
+## Stack 3-layer
 
-El stack es: **Svelte 5 → Threlte → Three.js → WebGPU / WebGL 2**
+```
+essentia-ui      → Componentes structurales y layout (Flex/Box/Align,
+                   futuros Button/Card/Input)
+                       │ depende de
+                       ▼
+essentia-styles  → Primitivas visuales GPU (Glass/Rect/Image/Text + Nodes)
+                       │ depende de
+                       ▼
+essentia-core    → Runtime: engine, scene graph, viewport, EssentiaNode
+```
 
----
+Dependencia unidireccional: las capas superiores conocen las inferiores,
+nunca al revés.
+
+## ¿Qué es Essentia (a nivel proyecto)?
+
+Un framework GPU-first para construir **aplicaciones** (no páginas, no
+juegos) con interfaces renderizadas íntegramente en la GPU. El DOM no es
+la superficie de renderizado — es una capa de soporte para accesibilidad
+y eventos nativos.
+
+Stack tecnológico: **Svelte 5 → Threlte → Three.js → WebGL 2 / WebGPU**.
 
 ## La unidad mínima: EssentiaNode
 
-La unidad atómica de UI no es un `div` ni un `Mesh` directo. Es un **`EssentiaNode`**: una abstracción propia que:
+La unidad atómica de UI no es un `div` ni un `Mesh` directo. Es un
+**`EssentiaNode`**: una clase que vive en `essentia-core` y:
 
-- Envuelve uno o más `Object3D` de Three.js
-- Expone una API de alto nivel: bounds, anchoring, transform
-- Gestiona su propio ciclo de vida dentro del scene graph
-- Hereda transformaciones del padre de forma eficiente en GPU
+- Envuelve uno o más `Object3D` de Three.js (`root`)
+- Expone API de alto nivel: `bounds`, `anchor`, `setSize`, `setPosition`,
+  `setScale`, scene graph (`addChild`/`removeChild`/`destroy`)
+- Gestiona ciclo de vida de recursos GPU vía `addDisposable()`
+- Hereda transformaciones del padre eficientemente en GPU
 
-Analogía: como un `VisualElement` de Unity UI Toolkit pero sobre Three.js, o como un "frame" de Figma pero en 3D.
+Subclases concretas (e.g. `GlassNode`, futuro `TextNode`) viven en
+`essentia-styles` junto a sus shaders. `essentia-core` solo provee la
+clase base.
 
----
+Analogía: como un `VisualElement` de Unity UI Toolkit pero sobre Three.js,
+o como un "frame" de Figma pero en 3D.
 
 ## World Space Layout
 
 No existe box model. No existe flujo de caja CSS.
 
-El layout es un sistema de **transformaciones matriciales** con:
+El layout absoluto que provee core es un sistema de **transformaciones
+matriciales** con:
 
 - **Cámara ortográfica 1:1** — 1 unidad de mundo = 1 píxel de pantalla
 - **Anchoring system** — los nodos se anclan a su padre o al viewport
-- **Responsive via viewport events** — el canvas reacciona a resize y recalcula transforms
+- **Responsive via viewport events** — el canvas reacciona a resize y
+  recalcula transforms
 
----
+Una capa de layout declarativa opcional (Yoga via `@threlte/flex`) vive
+en `essentia-ui` y coexiste con este sistema absoluto.
 
-## Estética: Liquid Glass PBR
+## Componente raíz: EssentiaRoot
 
-Las formas no son geometría poligonal burda. Son:
+`<EssentiaRoot>` monta la escena Threlte y orquesta:
 
-- **SDF (Signed Distance Fields)** — rectángulos, círculos y bordes suaves calculados en shader, infinitamente precisos
-- **Refracción dinámica** — pipeline multi-pasada que captura el framebuffer de fondo para calcular distorsión lumínica real con IOR
-- **Materiales PBR** — normal maps, environment maps (IBL), roughness/metalness
-- **Postprocesado** — blur (Kawase), chromatic aberration, depth of field cuando aplique
+- `<Canvas>` con la cámara ortográfica 1:1
+- `<SceneBackground>` que captura `BackgroundCapture` para refracción Glass
+- `<BackgroundCapture>` (render target del fondo, sin Glass)
+- `<Interactivity>` (plugin de raycasting para eventos pointer)
+- `<Environment>` (HDR/EXR loader opcional)
+- `<Suspense>` (orquestación de carga asíncrona, opt-in vía `loading` snippet)
 
----
+El `Engine` context (`useEngine()`) expone estado central reactivo:
+viewport, camera, envMap, backgroundTarget, glassMeshes registrados.
 
-## Tipografía: MSDF
-
-El texto es un objeto físico en el espacio 3D, no una capa HTML superpuesta.
-
-- Generación de atlas: `msdf-atlas-gen`
-- Renderizado: componente `Text` de `@threlte/extras`
-- Resultado: glifos infinitamente nítidos a cualquier escala, con iluminación y refracción aplicables
-
----
-
-## Accesibilidad: Hybrid Bridge
+## Accesibilidad: Hybrid Bridge (futuro, Fase 5)
 
 Para no romper SEO ni screen readers:
 
-- **Shadow Layer** — DOM HTML invisible generado vía SSR/SSG, sincronizado en tiempo real con el estado del canvas
-- **Ghost Inputs** — elementos `<input>` reales ocultos que gestionan foco, clipboard y teclados virtuales. La interactividad se proyecta al engine gráfico
+- **Shadow Layer** — DOM HTML invisible generado vía SSR/SSG, sincronizado
+  en tiempo real con el estado del canvas
+- **Ghost Inputs** — elementos `<input>` reales ocultos que gestionan
+  foco, clipboard y teclados virtuales. La interactividad se proyecta al
+  engine gráfico
 
----
+`essentia-core` proveerá las utilidades (`worldToScreen` ya existe;
+`projectNode` y similares vendrán en Fase 5). Los componentes Input
+viven en `essentia-ui`.
 
 ## Stack tecnológico
 
@@ -74,16 +103,14 @@ Para no romper SEO ni screen readers:
 |---|---|---|
 | Reactividad | Svelte 5 (Runes) | Estado, ciclo de vida, componentes |
 | Engine | Three.js ^0.180 | Core de renderizado |
-| Abstracción | Threlte ^8 | Orquestación de componentes y lifecycle |
-| Física / Input | @threlte/rapier | Raycasting para eventos + física |
-| Shaders | GLSL / WGSL | SDF, PBR, refracción, postprocesado |
-| Tipografía | msdf-atlas-gen + @threlte/extras Text | Texto vectorial en GPU |
-| Shader bundling | vite-plugin-glsl | Importar .glsl como módulos con HMR |
-| Tests | Vitest | Solo para core (store, graph, math) |
-
----
+| Abstracción | Threlte ^8 | Orquestación Threlte y lifecycle |
+| Eventos | @threlte/extras `interactivity` | Raycasting para pointer events |
+| Tests | Vitest | Tests de math, camera y EssentiaNode |
 
 ## Decisiones pendientes (TBD)
 
-- **Relación componente Svelte ↔ mesh(es):** a definir con criterio de performance. Un componente puede orquestar múltiples meshes.
-- **Escena vs Layout:** si el "layout" es la escena completa o si hay separación entre escena de fondo y escena de UI.
+- **Ghost Inputs / projectNode utility**: API exacta para proyectar bounds
+  de un EssentiaNode a coords de pantalla via `worldToScreen` + matrix
+  world. Necesario antes de Fase 5.
+- **Performance budget**: definir cuándo activar instancing (`InstancedMesh`)
+  para listas grandes de primitivas.
