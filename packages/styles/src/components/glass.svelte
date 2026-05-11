@@ -36,6 +36,8 @@
     blur?: number
     /** Intensidad del brillo Fresnel en los bordes [0..1+]. @default 0.06 */
     fresnelStrength?: number
+    /** Rugosidad de la superficie: perturba el normal vía ruido procedural [0..1]. @default 0 */
+    surfaceRoughness?: number
     x?: number
     y?: number
     z?: number
@@ -72,6 +74,7 @@
     envIntensity = 0,
     blur = 0,
     fresnelStrength = 0.06,
+    surfaceRoughness = 0,
     x = 0,
     y = 0,
     z = 0,
@@ -111,6 +114,7 @@
     envIntensity,
     blur,
     fresnelStrength,
+    surfaceRoughness,
   })
 
   // Registrar el mesh en el engine para que BackgroundCapture lo oculte
@@ -141,6 +145,7 @@
     node.setEnvIntensity(envIntensity)
     node.setBlur(blur)
     node.setFresnelStrength(fresnelStrength)
+    node.setSurfaceRoughness(surfaceRoughness)
 
     invalidate()
   })

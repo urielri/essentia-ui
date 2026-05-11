@@ -45,6 +45,7 @@ describe('GlassNode — construcción', () => {
     expect(node.uniforms.u_env_intensity.value).toBe(0)
     expect(node.uniforms.u_blur.value).toBe(0)
     expect(node.uniforms.u_fresnel_strength.value).toBe(0.06)
+    expect(node.uniforms.u_surface_roughness.value).toBe(0)
     expect(node.uniforms.u_tint.value).toBeInstanceOf(Vector4)
     expect(node.uniforms.u_tint.value.w).toBe(0)
   })
@@ -138,6 +139,12 @@ describe('GlassNode — setters de uniforms', () => {
     expect(node.uniforms.u_fresnel_strength.value).toBe(0.2)
   })
 
+  it('setSurfaceRoughness actualiza u_surface_roughness', () => {
+    const node = new GlassNode(baseOptions)
+    node.setSurfaceRoughness(0.6)
+    expect(node.uniforms.u_surface_roughness.value).toBe(0.6)
+  })
+
   it('setBackgroundTexture acepta Texture o null', () => {
     const node = new GlassNode(baseOptions)
     const tex = new Texture()
@@ -170,6 +177,7 @@ describe('GlassNode — setters de uniforms', () => {
     expect(node.setEnvIntensity(0)).toBe(node)
     expect(node.setBlur(0)).toBe(node)
     expect(node.setFresnelStrength(0)).toBe(node)
+    expect(node.setSurfaceRoughness(0.5)).toBe(node)
   })
 })
 

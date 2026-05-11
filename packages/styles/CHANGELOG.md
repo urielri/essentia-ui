@@ -3,9 +3,45 @@
 Documento informativo. Versionado vía Changesets + Turborepo.
 
 `essentia-styles` es la capa de **primitivas visuales**: shape SDF (`<Rect>`),
-texturas (`<Image>`), efectos GPU (`<Glass>`), y los nodos asociados
-(`GlassNode`). Todas las primitivas son hermanos en composición — ninguna
-acepta children de UI; la jerarquía la maneja la layer `essentia-ui`.
+texturas (`<Image>`), efectos GPU (`<Glass>`), texto MSDF (`<Text>`), y los
+nodos asociados (`GlassNode`, `TextNode`). Todas las primitivas son hermanos
+en composición — ninguna acepta children de UI; la jerarquía la maneja la
+layer `essentia-ui`.
+
+## [0.2.0] — Fase 4: MSDF Text
+
+### Added
+
+- **`<Text>`** componente: texto MSDF vía troika-three-text. Props
+  `text`, `fontSize`, `color`, `font` (URL custom), `alignment`,
+  `anchorX`/`anchorY` (normalizados [0..1]), `maxWidth` (wrap), `lineHeight`,
+  `letterSpacing`, `x`/`y`/`z`. Shell reactivo que sincroniza props
+  → setters del nodo.
+- **`TextNode extends EssentiaNode`** (`nodes/text-node.ts`): nodo que
+  encapsula `Text` mesh de troika. Setters tipados chainables
+  (`setText`, `setFontSize`, `setColor`, `setFont`, `setAlignment`,
+  `setAnchorX`, `setAnchorY`, `setMaxWidth`, `setLineHeight`,
+  `setLetterSpacing`). El mesh de troika se registra como disposable para
+  liberar atlas + material en `destroy()`.
+- **Glass shader refinement** (Step 3 — Fase 3.5):
+  - Nuevo uniform `u_surface_roughness` [0..1] que perturba el normal
+    virtual con ruido procedural 2D. Default `0` mantiene el comportamiento
+    actual; opt-in vía prop `surfaceRoughness` en `<Glass>`.
+  - IBL convertido de aditivo a mezcla vía Fresnel-Schlick (F0 = 0.04):
+    centro deja pasar refracción pura, bordes muestran reflejo dominante.
+  - Función `noise2D()` procedural añadida al shader.
+- **Exports**: `Text`, `TextNode`, `TextNodeOptions`, `TextAlignment`,
+  `AnchorNormalized` agregados a `styles.ts`.
+- **Tests**: `text-node.test.ts` (20 tests) cubre construcción, defaults,
+  setters, traducción de anchors, chainability y cleanup. `glass-node.test.ts`
+  extendido con test para `setSurfaceRoughness`.
+- **Demo route**: `/text-demo/` en `apps/web-svelte` — playground
+  interactivo con hero/body/caption text y opción de Glass de fondo.
+
+### Dependencies
+
+- Agregado: `troika-three-text@^0.52.4`
+- Agregado (dev): `jsdom` (para tests que requieren globales de browser).
 
 ## [0.1.0] — Initial release
 
