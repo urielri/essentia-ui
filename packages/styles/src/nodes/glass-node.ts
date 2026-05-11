@@ -43,6 +43,8 @@ export type GlassNodeOptions = {
   blur?: number
   /** Intensidad del brillo Fresnel en los bordes. @default 0.06 */
   fresnelStrength?: number
+  /** Rugosidad de la superficie: perturba el normal vía ruido procedural [0..1]. @default 0 */
+  surfaceRoughness?: number
 }
 
 /**
@@ -85,6 +87,7 @@ export class GlassNode extends EssentiaNode {
       envIntensity: options.envIntensity ?? 0,
       blur: options.blur ?? 0,
       fresnelStrength: options.fresnelStrength ?? 0.06,
+      surfaceRoughness: options.surfaceRoughness ?? 0,
     })
 
     const material = new ShaderMaterial({
@@ -190,6 +193,11 @@ export class GlassNode extends EssentiaNode {
 
   setFresnelStrength(strength: number): this {
     this.uniforms.u_fresnel_strength.value = strength
+    return this
+  }
+
+  setSurfaceRoughness(roughness: number): this {
+    this.uniforms.u_surface_roughness.value = roughness
     return this
   }
 }

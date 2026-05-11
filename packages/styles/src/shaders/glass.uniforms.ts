@@ -19,6 +19,8 @@ export type GlassUniforms = {
   u_blur: IUniform<number>
   /** Intensidad del brillo Fresnel en los bordes. @default 0.06 */
   u_fresnel_strength: IUniform<number>
+  /** Rugosidad de la superficie: perturba el normal via ruido procedural [0..1]. @default 0 */
+  u_surface_roughness: IUniform<number>
 }
 
 export type GlassUniformsParams = {
@@ -40,6 +42,7 @@ export type GlassUniformsParams = {
   envIntensity?: number
   blur?: number
   fresnelStrength?: number
+  surfaceRoughness?: number
 }
 
 export function createGlassUniforms(p: GlassUniformsParams): GlassUniforms {
@@ -57,5 +60,6 @@ export function createGlassUniforms(p: GlassUniformsParams): GlassUniforms {
     u_env_intensity: { value: p.envIntensity ?? 0 },
     u_blur: { value: p.blur ?? 0 },
     u_fresnel_strength: { value: p.fresnelStrength ?? 0.06 },
+    u_surface_roughness: { value: p.surfaceRoughness ?? 0 },
   }
 }

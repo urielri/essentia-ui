@@ -40,12 +40,34 @@ uniform float u_fresnel_strength;
 uniform sampler2D u_env_map;
 uniform float u_env_intensity;
 
+// Surface roughness: perturba virtualNormal vía ruido procedural [0..1]
+uniform float u_surface_roughness;
+
 varying vec2 v_uv;
 
 // Inigo Quilez — SDF rounded box
 float sdRoundedBox(vec2 p, vec2 b, float r) {
   vec2 q = abs(p) - b + r;
   return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+}
+
+// Ruido procedural 2D Perlin-like (simplificado)
+// Genera perturbaciones suaves en el rango [-1, 1]
+float noise2D(vec2 st) {
+  vec2 i = floor(st);
+  vec2 f = fract(st);
+  // Smooth interpolation
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  // Hash pseudo-aleatorio de dos enteros
+  float a = sin(dot(i, vec2(12.9898, 78.233))) * 43758.5453;
+  float b = sin(dot(i + vec2(1.0, 0.0), vec2(12.9898, 78.233))) * 43758.5453;
+  float c = sin(dot(i + vec2(0.0, 1.0), vec2(12.9898, 78.233))) * 43758.5453;
+  float d = sin(dot(i + vec2(1.0, 1.0), vec2(12.9898, 78.233))) * 43758.5453;
+  a = fract(a);
+  b = fract(b);
+  c = fract(c);
+  d = fract(d);
+  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y) * 2.0 - 1.0;
 }
 
 // Kernel Gaussiano 3×3 sobre u_background.
@@ -107,9 +129,19 @@ void main() {
   // Normal virtual: la superficie del glass se trata como ligeramente convexa.
   // toCenter desplaza el normal hacia los bordes → el centro refleja el cénit,
   // los bordes reflejan el horizonte del env map.
-  // curvature controla cuán pronunciada es la "lente" virtual.
+  // surfaceRoughness perturba el normal vía ruido procedural.
   float curvature = 0.6;
-  vec3 virtualNormal = normalize(vec3(-toCenter.x * curvature, toCenter.y * curvature, 1.0));
+  vec3 virtualNormal = vec3(-toCenter.x * curvature, toCenter.y * curvature, 1.0);
+  
+  // Perturbación procedural del normal: ruido escalado por surfaceRoughness
+  if (u_surface_roughness > 0.0) {
+    vec2 noiseUV = v_uv * 4.0;
+    float noiseX = noise2D(noiseUV + vec2(0.0, 0.0)) * u_surface_roughness * 0.15;
+    float noiseY = noise2D(noiseUV + vec2(100.0, 100.0)) * u_surface_roughness * 0.15;
+    virtualNormal.xy += vec2(noiseX, noiseY);
+  }
+  
+  virtualNormal = normalize(virtualNormal);
 
   // Cámara ortográfica mira en -Z → reflect da la dirección de reflejo
   vec3 viewDir = vec3(0.0, 0.0, -1.0);
@@ -117,9 +149,14 @@ void main() {
 
   vec3 envColor = sampleEnvMap(reflDir);
 
-  // El env map se mezcla sobre el color refractado
-  // u_env_intensity controla la contribución; 0 = sin efecto
-  refracted = mix(refracted, refracted + envColor, u_env_intensity * 0.5);
+  // Fresnel-Schlick: mezcla entre refracción pura (F=0) y reflejo (F=1)
+  // F0 = 0.04 para vidrio
+  float F0 = 0.04;
+  float cosTheta = clamp(dot(virtualNormal, -viewDir), 0.0, 1.0);
+  float fresnel = F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+  
+  // El env map se mezcla sobre el color refractado mediante Fresnel
+  refracted = mix(refracted, envColor, fresnel * u_env_intensity);
 
   // ── 6. Tinte ──────────────────────────────────────────────────
   refracted = mix(refracted, u_tint.rgb, u_tint.a);
