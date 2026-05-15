@@ -69,9 +69,9 @@ function normalizeToAnchorY(value: number): string | number {
  * scene graph de Three.js herede transformaciones desde un padre
  * `EssentiaNode` sin nodos intermedios.
  *
- * Nota: troika carga las fuentes de forma asíncrona. El método `sync()` se
- * llama automáticamente tras cada setter; el callback se dispara cuando
- * el mesh está listo para renderizar.
+ * Nota: troika genera el atlas MSDF de forma asíncrona. Para detectar
+ * cuándo el texto está listo para renderizar, escuchar el evento
+ * `synccomplete` en `node.mesh` (event system de Three.js Object3D).
  */
 export class TextNode extends EssentiaNode {
   readonly mesh: Text

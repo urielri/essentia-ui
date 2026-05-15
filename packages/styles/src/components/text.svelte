@@ -60,6 +60,13 @@
     letterSpacing,
   })
 
+  // troika.sync() solo ejecuta el callback si _needsSync === true. En el primer
+  // render los props son idénticos a los del constructor → _needsSync = false →
+  // el callback se descarta. El evento 'synccomplete' se despacha dentro del
+  // if(_needsSync) del constructor, por lo que sí llega al listener.
+  const onSyncComplete = () => invalidate()
+  node.mesh.addEventListener('synccomplete', onSyncComplete)
+
   // Sync reactivo: props → setters del nodo.
   // Single $effect — todos los setters disparan sync() de troika internamente.
   $effect(() => {
@@ -81,6 +88,7 @@
   // Cleanup: destroy() libera el atlas y material de troika vía disposable.
   $effect(() => {
     return () => {
+      node.mesh.removeEventListener('synccomplete', onSyncComplete)
       node.destroy()
     }
   })

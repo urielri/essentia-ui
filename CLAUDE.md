@@ -1,12 +1,4 @@
-# Essentia UI
-
-Lee estos archivos antes de cualquier tarea:
-
-- [Soul](.claude/soul.md) — postura y personalidad — **leer antes de cualquier tarea**
-- [Concept](.claude/concept.md) — modelo mental y arquitectura — **leer antes de cualquier tarea**
-- [Rules](.claude/rules.md) — convenciones y restricciones
-
----
+Lee [soul](.claude/soul.md) antes de cualquier tarea.
 
 # VistAlba — Compresión de contexto
 
@@ -22,28 +14,24 @@ Está disponible como servidor MCP con las siguientes herramientas.
 Read("data/users.json")
 
 # Usar:
-read_json(path="data/users.json", session_id="<nombre-del-proyecto>")
+read_json(path="data/users.json", session_id="<session-id>")
 ```
-
-Reemplazar `<nombre-del-proyecto>` con el nombre real del proyecto (ej: `"payments-api"`, `"ml-pipeline"`).
-Usar el mismo valor en todas las llamadas de la conversación — la continuidad del `session_id`
-habilita `schema_ref` y `delta`. Sin ella, cada llamada arranca sesión nueva y se pierde el ahorro acumulado.
 
 Esto aplica a TODOS los agentes, INCLUYENDO sub-agentes y tareas internas.
 
 ## Regla: archivos de código fuente
 
-**Usar `read_code` (vistalba) en lugar del tool `Read` estándar para archivos de código (`.rs`, `.ts`, `.py`, `.js`, `.tsx`, `.jsx`, u otros archivos de código).**
+**Usar `read_code` (vistalba) en lugar del tool `Read` estándar para archivos de código (`.rs`, `.ts`, `.py`, `.js`, etc.).**
 
 ```
 # En lugar de:
 Read("src/lib.rs")
 
 # Usar:
-read_code(path="src/lib.rs", session_id="<nombre-del-proyecto>")
+read_code(path="src/lib.rs", session_id="<session-id>")
 
 # Para leer solo una función o struct (60-80% de ahorro):
-read_code(path="src/lib.rs", session_id="<nombre-del-proyecto>", symbol="compress_inner")
+read_code(path="src/lib.rs", session_id="<session-id>", symbol="compress_inner")
 ```
 
 `read_code` elimina comentarios inline y de bloque, colapsa líneas en blanco, y preserva
@@ -52,29 +40,35 @@ doc comments (`///`, `/** */`) y strings literales. Ahorro típico: 15–30% sin
 
 ## Formatos comprimidos
 
-VistAlba puede entregar datos en cuatro formatos comprimidos. Interpretarlos directamente
-cuando el schema esté en contexto; usar `decompress` para reconstruir el JSON completo.
+Los datos que VistAlba entrega al contexto pueden venir en cuatro formatos. El modelo debe
+interpretarlos directamente — son semánticamente equivalentes a su JSON original.
 
-**JTON** — primera aparición del schema en la sesión:
+**JTON** — arrays de objetos homogéneos (primera aparición del schema en la sesión):
 ```
 [N: col1, col2, col3; val1, val2, val3; val4, val5, val6]
 ```
-`N` = filas · columnas separadas por `,` · filas separadas por `;`
+- `N` = número de filas
+- Separador de columnas: `,`
+- Separador de filas: `;`
 
-**schema_ref** — misma tabla, turnos siguientes (solo filas, sin headers):
+**schema_ref** — misma tabla, segundo envío en adelante (schema ya conocido):
 ```
 schema_ref:a3f9c1b7
 val1, val2, val3
 val4, val5, val6
 ```
+El hash referencia el schema enviado en un turno anterior. Solo se transmiten las filas.
 
-**delta** — misma tabla con cambios incrementales (`-N` elimina · `+N: vals` inserta · `~N: col; val` modifica):
+**delta** — misma tabla con cambios incrementales (≥70% de filas comunes):
 ```
 delta_ref:a3f9c1b7
 -3
 +1: Alice, admin
 ~0: role; superadmin
 ```
+- `-N` elimina la fila en posición N del estado anterior
+- `+N: vals` inserta una fila nueva en posición N
+- `~N: col; val` modifica una columna en la fila N
 
 **Onto** — objetos con anidamiento profundo (depth > 2):
 ```

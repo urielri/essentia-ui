@@ -63,7 +63,8 @@
       "Bash(cp ~/.config/nvim_backup_20260427/lua/plugins/editor.lua ~/.config/nvim/lua/plugins/editor.lua)",
       "Bash(cp ~/.config/nvim_backup_20260427/lua/plugins/treesitter.lua ~/.config/nvim/lua/plugins/treesitter.lua)",
       "Bash(fc-list)",
-      "Bash(system_profiler SPFontsDataType)"
+      "Bash(system_profiler SPFontsDataType)",
+      "mcp__vistalba__read_code"
     ]
   }
 }
