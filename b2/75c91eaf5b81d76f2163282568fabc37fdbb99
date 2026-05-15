@@ -1,0 +1,61 @@
+packages/styles/CLAUDE.md
+  s_f23e930d8c9474::t_6850d0beed22f2 2
+  s_f23e930d8c9474::t_e131f6a20d2606 1
+  s_f23e930d8c9474::t_56afcedd594d8d 3-93
+packages/ui/WARP.md
+  s_f23e930d8c9474::t_24b0b88b572cb2 1
+  s_f23e930d8c9474::t_56bc2792c09547 17,20-23,26-44,47-50,54-63
+packages/core/WARP.md
+  s_f23e930d8c9474::t_4a687be804e00e 1
+  s_f23e930d8c9474::t_bd64b8b7285d79 17,20-23,26-44,47-50,54-63
+packages/ui/.claude/soul.md
+  s_f23e930d8c9474::t_b30a3c3d3fae50 1-35
+packages/styles/.claude/soul.md
+  s_f23e930d8c9474::t_ed801457724a51 1-35
+packages/ui/CLAUDE.md
+  s_f23e930d8c9474::t_ede869ac8a186e 1
+  s_f23e930d8c9474::t_c70f5dce395814 2
+  s_f23e930d8c9474::t_cf8d1e3a83ff95 3-93
+.claude/soul.md
+  s_f23e930d8c9474::t_2ba2b6db1fe834 1-35
+CLAUDE.md
+  s_f23e930d8c9474::t_941575d89876ec 1-2
+packages/core/CLAUDE.md
+  s_f23e930d8c9474::t_09b5e9757da630 6
+  s_f23e930d8c9474::t_4c483f1b040f5e 8-101
+  s_f23e930d8c9474::t_c91e7bda0473f8 5
+WARP.md
+  s_f23e930d8c9474::t_942689f37a215a 1
+packages/styles/WARP.md
+  s_f23e930d8c9474::t_4775b099deea0f 1
+  s_f23e930d8c9474::t_5dedd707ef8590 17,20-23,26-44,47-50,54-63
+packages/styles/src/nodes/text-node.ts
+  s_627a4dc384fa58::t_ff46dace174192 72-74
+packages/styles/src/components/text.svelte
+  s_627a4dc384fa58::t_6010f93e2bfeb9 63-68,91
+  s_627a4dc384fa58::t_c9392cb55b70a5 69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "b275c91eaf5b81d76f2163282568fabc37fdbb99",
+  "prompts": {},
+  "sessions": {
+    "s_627a4dc384fa58": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bb35c609-0c65-483d-9a1b-46cb24d7fba1",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "urielri <urielrivps@gmail.com>"
+    },
+    "s_f23e930d8c9474": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "24a3c4d2-494c-4d4f-ac46-b8e6c75a9021",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "urielri <urielrivps@gmail.com>"
+    }
+  }
+}
