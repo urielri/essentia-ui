@@ -1,0 +1,25 @@
+packages/styles/src/components/text.svelte
+  s_627a4dc384fa58::t_96a7e08e8dfd8b 49
+  s_627a4dc384fa58::t_a3c5f3222d233b 90-98
+  s_627a4dc384fa58::t_a3671adcf34279 3
+packages/core/src/lib/core/engine.svelte.ts
+  s_627a4dc384fa58::t_eff71d713a38a5 33-38
+packages/core/src/lib/core/background-capture.svelte
+  s_627a4dc384fa58::t_1fee884a941e58 34,45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "eb780a8431a908b0a9b28ac27e232b14b7888f6c",
+  "prompts": {},
+  "sessions": {
+    "s_627a4dc384fa58": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bb35c609-0c65-483d-9a1b-46cb24d7fba1",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "urielri <urielrivps@gmail.com>"
+    }
+  }
+}
