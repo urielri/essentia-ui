@@ -30,8 +30,8 @@
     () => {
       if (!engine.camera) return
 
-      // Ocultar todos los Glass
       for (const m of engine.glassMeshes) m.visible = false
+      for (const m of engine.foregroundMeshes) m.visible = false
 
       const prevTarget = renderer.getRenderTarget()
 
@@ -42,6 +42,7 @@
       } finally {
         renderer.setRenderTarget(prevTarget)
         for (const m of engine.glassMeshes) m.visible = true
+        for (const m of engine.foregroundMeshes) m.visible = true
       }
     },
     { autoInvalidate: false },

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { T, useThrelte } from '@threlte/core'
+  import { useEngine } from 'essentia-core'
   import { TextNode, type TextAlignment } from '../nodes/text-node.js'
 
   interface Props {
@@ -45,6 +46,7 @@
   }: Props = $props()
 
   const { invalidate } = useThrelte()
+  const engine = useEngine()
 
   // Construcción una sola vez. El shell solo orquesta props → setters del nodo.
   const node = new TextNode({
@@ -83,6 +85,15 @@
     node.setPosition(x, y, z)
 
     invalidate()
+  })
+
+  // Registro en foregroundMeshes: BackgroundCapture oculta estos meshes durante
+  // la captura del fondo para evitar que aparezcan como fantasmas a través del Glass.
+  $effect(() => {
+    engine.foregroundMeshes.add(node.mesh)
+    return () => {
+      engine.foregroundMeshes.delete(node.mesh)
+    }
   })
 
   // Cleanup: destroy() libera el atlas y material de troika vía disposable.

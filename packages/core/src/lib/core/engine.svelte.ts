@@ -30,6 +30,12 @@ export class Engine {
    * No es $state — no necesita reactividad, es un Set mutable de referencias.
    */
   glassMeshes: Set<Mesh> = new Set()
+  /**
+   * Registro de meshes foreground (Text, etc.) que deben excluirse de la captura de fondo.
+   * Sin esto, los labels que están encima del Glass aparecen como fantasmas a través de él.
+   * No es $state — es un Set mutable de referencias.
+   */
+  foregroundMeshes: Set<Mesh> = new Set()
 }
 
 export function createEngine(): Engine {
