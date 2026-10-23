@@ -190,4 +190,16 @@ export class TextNode extends EssentiaNode {
     this.mesh.sync()
     return this
   }
+
+  /**
+   * Suscribe un callback al fin de cada sync de troika (evento
+   * `synccomplete`). Necesario con render on-demand: el sync es async, así
+   * que un `invalidate()` inmediato renderiza la geometría anterior.
+   *
+   * @returns función para desuscribir.
+   */
+  onSync(callback: () => void): () => void {
+    this.mesh.addEventListener('synccomplete', callback)
+    return () => this.mesh.removeEventListener('synccomplete', callback)
+  }
 }

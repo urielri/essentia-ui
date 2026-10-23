@@ -78,9 +78,14 @@
     invalidate()
   })
 
+  // Re-render cuando troika termina el sync async: el invalidate() del
+  // $effect de arriba corre antes de que la geometría nueva esté lista.
+  const offSync = node.onSync(invalidate)
+
   // Cleanup: destroy() libera el atlas y material de troika vía disposable.
   $effect(() => {
     return () => {
+      offSync()
       node.destroy()
     }
   })

@@ -76,10 +76,15 @@ Las fases siguientes agregan capacidades en `essentia-styles` y
 - ✅ **Fase 1** — Engine + cámara ortográfica + EssentiaNode (`core`).
 - ✅ **Fase 2** — SDF Rect (`styles`).
 - ✅ **Fase 3** — Liquid Glass + Environment Map (`styles`).
-- 🟡 **Fase 4** — MSDF Text (`styles`) + Raycasting events (✅ en core
-  como `<Interactivity>`). Pendiente: TextNode + componente Text.
-- ⏳ **Fase 5** — Hybrid Bridge / Ghost Inputs + primeros higher-level
-  components (`Button`, `Card`, `Input` en `ui`).
+- ✅ **Fase 3.5** — Glass shader refinement: `surfaceRoughness` +
+  IBL vía Fresnel-Schlick (`styles@0.2.0`).
+- ✅ **Fase 4** — MSDF Text (`<Text>` + `TextNode` en `styles@0.2.0`) +
+  Raycasting events (`<Interactivity>` en core).
+- 🟡 **Fase 5** — Higher-level components y Hybrid Bridge:
+  - ✅ **5A** — `<GlassButton>` + `<Card>` (`ui@0.1.0`, demo en
+    `/components-demo`).
+  - ⏳ **5B** — Hybrid Bridge / Ghost Inputs (utilidades en `core`) +
+    componente `Input` en `ui`.
 
 ## Documentación interna
 
