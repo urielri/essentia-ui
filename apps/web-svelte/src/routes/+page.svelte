@@ -4,8 +4,15 @@
   import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
   import type { Texture } from "three";
 
-  // URL resuelta por Vite desde el alias #hdr → packages/ui/src/hdr_envs/
-  import monochromeUrl from "#hdr/monochrome_1k.hdr?url";
+  // URL resuelta por Vite desde el alias #hdr → packages/core/src/hdr_envs/.
+  // Los .hdr están en .gitignore: glob (en vez de import estático) para que
+  // la ruta compile aunque el archivo no exista localmente.
+  const hdrUrls = import.meta.glob<string>("#hdr/monochrome_1k.hdr", {
+    query: "?url",
+    import: "default",
+    eager: true,
+  });
+  const monochromeUrl: string | undefined = Object.values(hdrUrls)[0];
 
   let envTexture: Texture | null = $state(null);
   let loading = $state(false);
@@ -26,6 +33,7 @@
   }
 
   function loadEnv() {
+    if (!monochromeUrl) return;
     loading = true;
     new RGBELoader().load(
       monochromeUrl,
@@ -168,8 +176,8 @@
 </div>
 
 <div class="controls">
-  <button onclick={loadEnv} disabled={loading || !!envTexture}>
-    {loading ? "loading…" : envTexture ? "env loaded" : "load env"}
+  <button onclick={loadEnv} disabled={!monochromeUrl || loading || !!envTexture}>
+    {!monochromeUrl ? "no env file" : loading ? "loading…" : envTexture ? "env loaded" : "load env"}
   </button>
   <a href="/product">product demo →</a>
   <a href="/playground">playground →</a>

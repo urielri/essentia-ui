@@ -1,7 +1,12 @@
 <script lang="ts">
   import { useThrelte, useTask } from '@threlte/core'
   import { useEngine } from './engine.svelte.js'
-  import { createBackgroundRenderTarget } from './background-capture.js'
+  import type { Object3D } from 'three'
+  import {
+    createBackgroundRenderTarget,
+    hideForBackgroundCapture,
+    restoreBackgroundCapture,
+  } from './background-capture.js'
 
   const { renderer, scene } = useThrelte()
   const engine = useEngine()
@@ -24,14 +29,20 @@
     }
   })
 
+  // Reutilizado entre frames para no alocar en el render loop.
+  const hidden: Object3D[] = []
+
   // Captura de fondo una vez por frame, en mainStage (antes del renderStage de Threlte).
-  // Oculta todos los Glass registrados → la textura capturada no incluye Glass.
+  // Oculta los Glass y lo que está delante de ellos → la textura capturada
+  // solo contiene lo que el Glass debe refractar.
   useTask(
     () => {
       if (!engine.camera) return
 
-      // Ocultar todos los Glass
-      for (const m of engine.glassMeshes) m.visible = false
+      // matrixWorld al día para comparar z de mundo (render() lo actualizaría
+      // recién después de decidir qué ocultar).
+      scene.updateMatrixWorld()
+      hideForBackgroundCapture(scene, engine.glassMeshes, hidden)
 
       const prevTarget = renderer.getRenderTarget()
 
@@ -41,7 +52,7 @@
         renderer.render(scene, engine.camera)
       } finally {
         renderer.setRenderTarget(prevTarget)
-        for (const m of engine.glassMeshes) m.visible = true
+        restoreBackgroundCapture(hidden)
       }
     },
     { autoInvalidate: false },
