@@ -134,6 +134,29 @@ describe('TextNode — setters', () => {
   })
 })
 
+describe('TextNode — onSync', () => {
+  it('llama al callback cuando troika emite synccomplete', () => {
+    const node = new TextNode({ text: 'foo' })
+    const callback = vi.fn()
+
+    node.onSync(callback)
+    node.mesh.dispatchEvent({ type: 'synccomplete' })
+
+    expect(callback).toHaveBeenCalledTimes(1)
+  })
+
+  it('deja de llamar al callback tras desuscribir', () => {
+    const node = new TextNode({ text: 'foo' })
+    const callback = vi.fn()
+
+    const off = node.onSync(callback)
+    off()
+    node.mesh.dispatchEvent({ type: 'synccomplete' })
+
+    expect(callback).not.toHaveBeenCalled()
+  })
+})
+
 describe('TextNode — destroy', () => {
   it('libera el mesh de troika vía dispose()', () => {
     const node = new TextNode({ text: 'foo' })

@@ -174,6 +174,8 @@
   <a href="/product">product demo →</a>
   <a href="/playground">playground →</a>
   <a href="/flex-demo">flex demo →</a>
+  <a href="/text-demo">text demo →</a>
+  <a href="/components-demo">components →</a>
 </div>
 
 <style>

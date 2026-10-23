@@ -4,14 +4,20 @@
  * en `TextNode` para mantener type-safety en el wrapper.
  */
 declare module 'troika-three-text' {
-  import { Mesh, Material, Color } from 'three'
+  import { Mesh, Material, Color, BufferGeometry, Object3DEventMap } from 'three'
+
+  /** Eventos que troika despacha alrededor de cada `sync()`. */
+  export interface TextEventMap extends Object3DEventMap {
+    syncstart: object
+    synccomplete: object
+  }
 
   /**
    * Mesh de texto MSDF con API declarativa.
    * Las propiedades modifican el estado interno; llamar `sync()` para
    * regenerar el atlas y refrescar la geometría.
    */
-  export class Text extends Mesh {
+  export class Text extends Mesh<BufferGeometry, Material, TextEventMap> {
     /** Contenido textual a renderizar. */
     text: string
     /** Tamaño de fuente en unidades de mundo. */
