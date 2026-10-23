@@ -16,6 +16,17 @@ Trabajo posterior a `0.1.0`. La pieza central es la separación del paquete
 único `essentia` en tres paquetes ortogonales (`essentia-core`,
 `essentia-styles`, `essentia-ui`).
 
+### Fixed
+
+- **Texto duplicado sobre Glass**: `BackgroundCapture` solo ocultaba los
+  Glass, así que el texto y las primitivas apiladas delante de un Glass
+  entraban en la textura de fondo y aparecían refractados como una copia
+  desplazada. Ahora también oculta los renderables con z de mundo mayor a
+  la del Glass más profundo (`hideForBackgroundCapture` /
+  `restoreBackgroundCapture`, con 8 tests). Los objetos a la misma z que el
+  Glass se siguen capturando. Además restaura solo lo que ocultó: antes
+  forzaba `visible = true` en todos los Glass.
+
 ### Added
 
 - **`EssentiaNode.addDisposable()`** + interface `Disposable`. `destroy()`
