@@ -8,6 +8,23 @@ nodos asociados (`GlassNode`, `TextNode`). Todas las primitivas son hermanos
 en composición — ninguna acepta children de UI; la jerarquía la maneja la
 layer `essentia-ui`.
 
+## [Unreleased]
+
+### Fixed
+
+- **`<Text>` no reflejaba cambios de props en el canvas** hasta el
+  siguiente render. Con render on-demand, el `invalidate()` corría antes de
+  que terminara el `sync()` async de troika y el frame mostraba la
+  geometría anterior. Ahora el shell re-invalida al recibir
+  `synccomplete`.
+
+### Added
+
+- **`TextNode.onSync(callback)`**: suscribe un callback al evento
+  `synccomplete` de troika; devuelve la función para desuscribir.
+- **Tipos**: `TextEventMap` (`syncstart`, `synccomplete`) en `troika.d.ts`.
+- **Tests**: 2 casos para `onSync` (dispatch y desuscripción).
+
 ## [0.2.0] — Fase 4: MSDF Text
 
 ### Added
